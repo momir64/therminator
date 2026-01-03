@@ -17,7 +17,7 @@ Bitno je istaći da je rezolucija termo kamere svega 32x24 piksela. Pored toga p
 ### Komponente
 - [x] MLX90640BAB termo kamera (BAB - variant with smaller FOV lens) 
 - [x] Arduino Nano 
-- [ ] JDY-33 Bluetooth modul 
+- [x] JDY-33 Bluetooth modul 
 - [x] 5V napajanje 
 
 ## Zvučnik modul
@@ -25,7 +25,7 @@ Kako bi se sprečilo nasilno prigušivanje sata upotrebom obližnjih objekata (n
 
 ### Komponente 
 - [x] Bluetooth audio receiver
-- [ ] PAM8610 2x15W pojačalo
+- [x] PAM8610 2x15W pojačalo
 - [x] 10W 8Ohm zvučnici
 - [x] LM2596 step down DC-DC regulator
 - [x] 12V napajanje
@@ -39,10 +39,10 @@ Centralni koordinator u sistemu biće sat modul. U njemu će se odvijati procesi
 - [x] QTSS HDMI-RGB21-V06 LCD Board for 40Pin display
 - [x] Samoresetujući prekidač
 - [x] PCM5102 I2S DAC
-- [ ] CJMCU-8406 pojačalo
+- [x] CJMCU-8406 pojačalo
 - [x] 3W 4Ohm zvučnici
-- [ ] Waveshare UPS Module 3S
-- [ ] 3 Li-ion baterije 18650
+- [x] Waveshare UPS Module 3S
+- [x] 3 Li-ion baterije 18650
 - [x] 12V napajanje
 - [ ] Kablovi i konektori
 
@@ -62,7 +62,8 @@ Sat modulom bi se pristupalo preko kućnog servera sa zakupljenim domenom (Raspb
     - Pregled (preview) kamere zarad olakšanog procesa pozicioniranja i kalibrisanja
     - Podešavanje parametara detekcije (threshold-a)
 - Podešavanje ekrana
-    - Podešavanje izgleda ekrana, fonta i boje teksta
+    - Podešavanje osvetljenosti ekrana, fonta i boje teksta
+    - Podešavanje aktivnog vremena ekrana
     - Podešavanje korisnih informacija kao što je vremenska prognoza
 - Podešavanje baterije
     - Pregled trenutne napunjenosti baterije
@@ -71,4 +72,4 @@ Sat modulom bi se pristupalo preko kućnog servera sa zakupljenim domenom (Raspb
 
 ## Nefunkcionalni zahtevi
 
-Sistemom bi se pretežno upravljalo telefonom, međutim potrebno je zadržati opciju upravljanja i sa drugih uređaja. Iz tog razloga, za izradu klijentske aplikacije bio bi korišćen Flutter, kako bi se omogućila cross platform kompatibilnost. Za kreiranje backend servera koristio bi se neki od python framework-a, kao što je FastAPI.
+Sistemom bi se pretežno upravljalo telefonom, međutim potrebno je zadržati opciju upravljanja i sa drugih uređaja. Iz tog razloga, za izradu klijentske aplikacije bio bi korišćen Flutter, kako bi se omogućila cross platform kompatibilnost. Za kreiranje backend servera koristio bi se neki od python framework-a, kao što je Sanic.

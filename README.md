@@ -16,8 +16,7 @@ Bitno je istaći da je rezolucija termo kamere svega 32x24 piksela. Pored toga p
 
 ### Komponente
 - [x] MLX90640BAB termo kamera (BAB - variant with smaller FOV lens) 
-- [x] Arduino Nano 
-- [x] JDY-33 Bluetooth modul 
+- [x] ESP32 S3 Nano
 - [x] 5V napajanje 
 
 ## Zvučnik modul
@@ -27,8 +26,8 @@ Kako bi se sprečilo nasilno prigušivanje sata upotrebom obližnjih objekata (n
 - [x] Bluetooth audio receiver
 - [x] PAM8610 2x15W pojačalo
 - [x] 10W 8Ohm zvučnici
-- [x] LM2596 step down DC-DC regulator
 - [x] 12V napajanje
+- [x] 5V napajanje 
 
 ## Sat modul
 Centralni koordinator u sistemu biće sat modul. U njemu će se odvijati procesiranje signala kamera modula, kao i upravljanje zvučnik modulom. Konfiguracije i pesme budilnika će se lokalno skladištiti u okviru sat modula. Osnovni elementi ovog modula su Raspberry Pi 3, dugme za gašenje budilnika i ekran za prikaz informacija kao što su trenutno vreme, vreme do sledećeg budilnika, vremenska prognoza itd… Kako bi se povećala redundantnost sistema, modul će takođe posedovati i USP za slučaj gubitka napajanja. Takođe će posedovati i sopstveni sistem zvučnika u slučaju da je zvučnik modul nedostupan.
@@ -44,7 +43,7 @@ Centralni koordinator u sistemu biće sat modul. U njemu će se odvijati procesi
 - [x] Waveshare UPS Module 3S
 - [x] 3 Li-ion baterije 18650
 - [x] 12V napajanje
-- [ ] Kablovi i konektori
+- [x] Kablovi i konektori
 
 
 # Upravljanje sistemom
@@ -72,4 +71,4 @@ Sat modulom bi se pristupalo preko kućnog servera sa zakupljenim domenom (Raspb
 
 ## Nefunkcionalni zahtevi
 
-Sistemom bi se pretežno upravljalo telefonom, međutim potrebno je zadržati opciju upravljanja i sa drugih uređaja. Iz tog razloga, za izradu klijentske aplikacije bio bi korišćen Flutter, kako bi se omogućila cross platform kompatibilnost. Za kreiranje backend servera koristio bi se neki od python framework-a, kao što je Sanic.
+Sistemom bi se pretežno upravljalo telefonom, međutim potrebno je zadržati opciju upravljanja i sa drugih uređaja. Iz tog razloga, za izradu klijentske aplikacije koristio bi se Kotlin Compose Multiplatform, kako bi se omogućila cross platform kompatibilnost. Za kreiranje backend servera koristio bi se Sanic, python web server framework.

@@ -1,0 +1,15 @@
+{
+    "password": "demo",
+    "config": {
+        "camera": {
+            "mac": "9C:13:9E:91:2F:4D",
+            "resolution": 0,
+            "framerate": 4,
+            "threshold": {
+                "temperature": 34,
+                "pixels": 20,
+                "frames": 3
+            }
+        }
+    }
+}

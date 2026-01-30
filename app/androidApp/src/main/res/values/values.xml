@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">Therminator</string>
+
+    <color name="ic_launcher_background">#21201E</color>
+
+    <style name="Theme.Therminator.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#111110</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+        <item name="postSplashScreenTheme">@style/Theme.AppCompat.DayNight.NoActionBar</item>
+    </style>
+</resources>

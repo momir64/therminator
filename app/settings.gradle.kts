@@ -1,4 +1,4 @@
-rootProject.name = "SleepTherminator"
+rootProject.name = "Therminator"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 @Suppress("UnstableApiUsage")

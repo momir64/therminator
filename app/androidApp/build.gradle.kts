@@ -15,27 +15,26 @@ kotlin {
 
     dependencies {
         implementation(projects.shared)
-        implementation(libs.androidx.activity.compose)
+        implementation(libs.koin.core)
+        implementation(libs.koin.android)
+        implementation(libs.ktor.client.okhttp)
         implementation(libs.compose.uiToolingPreview)
+        implementation(libs.androidx.activity.compose)
+        implementation(libs.androidx.core.splashscreen)
+        implementation(libs.androidx.datastore.preferences)
     }
 }
 
 android {
-    namespace = "rs.moma.sleeptherminator"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    namespace = "rs.moma.therminator"
+    compileSdk = 36
 
     defaultConfig {
-        applicationId = "rs.moma.sleeptherminator"
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
+        applicationId = "rs.moma.therminator"
+        minSdk = 24
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-    }
-
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
     }
 
     buildTypes {

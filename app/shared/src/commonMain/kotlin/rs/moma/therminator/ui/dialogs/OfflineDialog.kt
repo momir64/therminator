@@ -1,0 +1,63 @@
+package rs.moma.therminator.ui.dialogs
+
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import rs.moma.therminator.ui.theme.CardColor
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import rs.moma.therminator.ui.theme.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+@Composable
+fun OfflineDialog(onRetry: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .background(Color.Black.copy(alpha = 0.6f))
+            .padding(24.dp)
+            .fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .background(CardColor, RoundedCornerShape(16.dp))
+                .padding(horizontal = 26.dp, vertical = 28.dp)
+                .fillMaxWidth()
+        ) {
+            Spacer(Modifier.height(4.dp))
+            Text("Server is unreachable", fontSize = 24.sp)
+            Spacer(Modifier.height(14.dp))
+            Text(
+                "We were unable to reach the server, please try again later.",
+                fontSize = 18.sp,
+                color = OutlineColor
+            )
+            Spacer(Modifier.height(28.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Button(
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentColor),
+                    modifier = Modifier.size(96.dp, 42.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    onClick = onRetry
+                ) {
+                    Text("Retry", color = Color.White)
+                }
+            }
+        }
+    }
+}

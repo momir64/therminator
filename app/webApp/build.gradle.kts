@@ -1,11 +1,10 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
 plugins {
-    alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.composeCompiler)
 }
-
 
 kotlin {
     js {
@@ -22,7 +21,11 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(projects.shared)
+            implementation(libs.kotlinx.browser)
+            implementation(libs.ktor.client.js)
+            implementation(libs.koin.compose)
             implementation(libs.compose.ui)
+            implementation(libs.koin.core)
         }
     }
 }

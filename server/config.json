@@ -6,7 +6,7 @@
             "resolution": 0,
             "framerate": 4,
             "threshold": {
-                "temperature": 34,
+                "temperature": 28.0,
                 "pixels": 20,
                 "frames": 3
             }

@@ -3,12 +3,14 @@ from sanic.response import empty, json as json_response
 from sanic import Sanic, Request, Websocket
 from battery import BatterySensor
 from camera import ThermalCamera
+from sanic_cors import CORS
 import asyncio
 import base64
 import json
 
-app = Sanic("SleepTherminator")
 CONFIG_FILE = "config.json"
+app = Sanic("SleepTherminator")
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 
 @app.listener("before_server_start")
@@ -24,6 +26,8 @@ async def config(server: Sanic):
 
 @app.middleware("request")
 async def auth_middleware(request: Request):
+    if request.headers.get("upgrade", "").lower() == "websocket":
+        return
     header = request.headers.get("auth")
     if not header:
         raise Unauthorized("Missing authorization header")
@@ -33,6 +37,18 @@ async def auth_middleware(request: Request):
         raise Unauthorized("Invalid token")
     if decoded != app.ctx.password:
         raise Unauthorized("Forbidden")
+
+
+async def authenticate_ws(ws: Websocket, timeout: float = 5) -> bool:
+    try:
+        token = await asyncio.wait_for(ws.recv(), timeout=timeout)
+        decoded = base64.b64decode(token).decode()
+        if decoded != app.ctx.password:
+            raise Exception("Forbidden")
+    except Exception:
+        await ws.close()
+        return False
+    return True
 
 
 @app.get("/")
@@ -56,6 +72,7 @@ async def update_camera_settings(request: Request):
     await app.ctx.camera.update_settings(resolution, framerate)
     app.ctx.config["camera"]["resolution"] = resolution
     app.ctx.config["camera"]["framerate"] = framerate
+    app.ctx.config["camera"]["threshold"] = body["threshold"]
 
     with open(CONFIG_FILE, "w") as file:
         json.dump({
@@ -68,6 +85,8 @@ async def update_camera_settings(request: Request):
 
 @app.websocket("/camera")
 async def camera_ws(request: Request, ws: Websocket):
+    if not await authenticate_ws(ws):
+        return
     queue = app.ctx.camera.get_queue()
     try:
         while True:
@@ -79,12 +98,21 @@ async def camera_ws(request: Request, ws: Websocket):
 
 @app.websocket("/battery")
 async def battery_ws(request: Request, ws: Websocket):
+    if not await authenticate_ws(ws):
+        return
     try:
         while True:
-            await ws.send(str(app.ctx.battery.get_percentage()))
-            await asyncio.sleep(5)
+            is_charging = app.ctx.battery.is_charging()
+            percentage = app.ctx.battery.get_percentage()
+            await ws.send(f"{is_charging},{percentage}".lower())
+            await asyncio.sleep(3)
     except WebsocketClosed:
         pass
+
+
+@app.get("/test")
+async def test(request: Request):
+    return empty()
 
 
 if __name__ == "__main__":

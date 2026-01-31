@@ -7,6 +7,8 @@ import weakref
 class ThermalCamera:
     _SETTINGS_UUID = "173f51fe-0ca9-4aac-873c-ac2811209099"
     _FRAME_UUID = "705b66b4-8f43-440e-96fd-e071ab46d471"
+    _PING_UUID = "8f4a7e58-9c3e-4fbe-8e0d-7e7d2e8a7b1a"
+    _PING_INTERVAL = 1.0
     _RECONNECT_DELAY = 2
     _MAX_FRAME_AGE = 5
     _UINT8_MAX = 2 ** 8
@@ -33,7 +35,8 @@ class ThermalCamera:
                 await self._client.start_notify(self._FRAME_UUID, self._frame_callback)
 
                 while self._client.is_connected:
-                    await asyncio.sleep(1)
+                    await self._client.write_gatt_char(self._PING_UUID, bytearray([1]))
+                    await asyncio.sleep(self._PING_INTERVAL)
 
                 raise BleakError("Device disconnected")
             except Exception as e:
@@ -68,10 +71,13 @@ class ThermalCamera:
             values = [[round(value, 3) for value in row] for row in (arr16.astype(np.float32) / 1000.0).tolist()]
 
             for queue in self._subscriber_queues:
-                try:
-                    self._loop.call_soon_threadsafe(queue.put_nowait, values)
-                except asyncio.QueueFull:
-                    pass
+                def put_frame(q, vals):
+                    try:
+                        q.put_nowait(vals)
+                    except asyncio.QueueFull:
+                        _ = q.get_nowait()
+                        q.put_nowait(vals)
+                self._loop.call_soon_threadsafe(put_frame, queue, values)
 
             del self._frames[frame_idx]
 
@@ -89,7 +95,7 @@ class ThermalCamera:
         except Exception as e:
             print(f"Failed to update settings: {e}")
 
-    def get_queue(self):
+    def get_queue(self) -> asyncio.Queue[list[list[float]]]:
         queue = asyncio.Queue(maxsize=10)
         self._subscriber_queues.add(queue)
         return queue

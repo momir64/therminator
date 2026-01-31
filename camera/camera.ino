@@ -2,19 +2,22 @@
 #include <ArduinoBLE.h>
 #include <Wire.h>
 
+#define PING_TIMEOUT_MS 5000
 #define TOTAL_SIZE 32 * 24
 #define MAX_CHUNK_SIZE 116
 #define SUCCESS 0
 
 Adafruit_MLX90640 mlx;
 BLEService cameraService("febf1d04-587e-444e-bcae-4569ce926715");
+BLECharacteristic pingChar("8f4a7e58-9c3e-4fbe-8e0d-7e7d2e8a7b1a", BLEWrite, 1);
 BLECharacteristic settingsChar("173f51fe-0ca9-4aac-873c-ac2811209099", BLEWrite | BLEWriteWithoutResponse, 2);
 BLECharacteristic frameChar("705b66b4-8f43-440e-96fd-e071ab46d471", BLERead | BLENotify, MAX_CHUNK_SIZE * 2 + 2);
 
-String white_list[] = { "34:C9:3D:01:4E:E6", "AA:AA:AA:AA:AA:AA" };
+String white_list[] = { "34:C9:3D:01:4E:E6", "B8:27:EB:BC:0A:94" };
 const int white_list_size = sizeof(white_list) / sizeof(white_list[0]);
 
 uint16_t frame_bytes[TOTAL_SIZE];
+unsigned long lastPingTime = 0;
 float frame[TOTAL_SIZE];
 uint8_t frame_idx = 0;
 
@@ -39,6 +42,7 @@ void setup() {
   }
 
   BLE.setAdvertisedService(cameraService);
+  cameraService.addCharacteristic(pingChar);
   cameraService.addCharacteristic(frameChar);
   cameraService.addCharacteristic(settingsChar);
   BLE.addService(cameraService);
@@ -53,6 +57,7 @@ void loop() {
   if (central) {
     Serial.print("Connected to central: ");
     Serial.println(central.address());
+    lastPingTime = millis();
 
     bool allowed = false;
     for (int i = 0; i < white_list_size; i++)
@@ -76,6 +81,18 @@ void loop() {
           mlx.setResolution((mlx90640_resolution_t)settings[1]);
 
         Serial.printf("Updated settings: Refresh rate = %d, Resolution = %d\n", settings[0], settings[1]);
+      }
+
+      if (pingChar.written()) {
+        uint8_t val;
+        pingChar.readValue(&val, 1);
+        lastPingTime = millis();
+      }
+
+      if (millis() - lastPingTime > PING_TIMEOUT_MS) {
+        Serial.println("No ping received for 5s, disconnecting...");
+        central.disconnect();
+        break;
       }
 
       if (mlx.getFrame(frame) == SUCCESS) {

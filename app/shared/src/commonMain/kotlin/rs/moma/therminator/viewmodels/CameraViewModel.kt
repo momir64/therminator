@@ -37,7 +37,8 @@ class CameraViewModel : ViewModel(), KoinComponent {
     private val _cameraFrame = MutableStateFlow<CameraFrame?>(null)
     val cameraFrame = _cameraFrame.asStateFlow()
 
-    init {
+    fun onEnter() {
+        _isCameraOffline.value = false
         viewModelScope.launch { getCameraSettings() }
         startCameraWs()
     }
@@ -63,6 +64,12 @@ class CameraViewModel : ViewModel(), KoinComponent {
                 cameraWsJob = null
             }
         }
+    }
+
+    fun endCameraWs() {
+        cameraWsJob?.cancel()
+        cameraWsJob = null
+        _cameraFrame.value = null
     }
 
     private suspend fun getCameraSettings() {

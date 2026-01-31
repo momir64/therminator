@@ -1,4 +1,5 @@
 sanic_cors>=2.2.0
+RPi.GPIO>=0.7.1
 sanic>=25.12.0
 httpx>=0.28.1
 bleak>=2.1.1

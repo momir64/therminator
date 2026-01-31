@@ -1,8 +1,10 @@
 from sanic.exceptions import Unauthorized, WebsocketClosed
 from sanic.response import empty, json as json_response
 from sanic import Sanic, Request, Websocket
+from test import test as alarm_test
 from battery import BatterySensor
 from camera import ThermalCamera
+from audio import AudioPlayer
 from sanic_cors import CORS
 import asyncio
 import base64
@@ -22,6 +24,7 @@ async def config(server: Sanic):
         server.ctx.config = data["config"]
         camera = data["config"]["camera"]
         server.ctx.camera = ThermalCamera(camera["mac"], camera["resolution"], camera["framerate"])
+        server.ctx.player = AudioPlayer(data["config"]["speaker"]["mac"])
 
 
 @app.middleware("request")
@@ -112,6 +115,7 @@ async def battery_ws(request: Request, ws: Websocket):
 
 @app.get("/test")
 async def test(request: Request):
+    asyncio.create_task(alarm_test(app.ctx.player, app.ctx.camera, app.ctx.config["camera"]["threshold"]))
     return empty()
 
 

@@ -10,6 +10,9 @@
                 "pixels": 20,
                 "frames": 3
             }
+        },
+        "speaker": {
+            "mac": "8C:A2:CE:18:78:22"
         }
     }
 }

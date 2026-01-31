@@ -3,10 +3,8 @@ package rs.moma.therminator.ui.screens.settings
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
-import therminator.shared.generated.resources.ic_visibility
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.requiredWidthIn
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
@@ -31,7 +29,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.SwitchDefaults
+import androidx.compose.runtime.DisposableEffect
 import rs.moma.therminator.ui.theme.OutlineColor
 import androidx.compose.ui.text.style.TextAlign
 import rs.moma.therminator.ui.theme.AccentColor
@@ -81,6 +79,16 @@ fun CameraScreen(navController: NavHostController) {
     var pixels by remember { mutableStateOf<Int?>(null) }
     var temperature by remember { mutableStateOf<Float?>(null) }
     var applyMask by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        cameraViewModel.onEnter()
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            cameraViewModel.endCameraWs()
+        }
+    }
 
     LaunchedEffect(settings) {
         settings?.let {
@@ -180,7 +188,7 @@ fun CameraScreen(navController: NavHostController) {
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    NumericField("Min. Temperature", temperature, Modifier.weight(1f)) { temperature = it }
+                    NumericField("Min temperature", temperature, Modifier.weight(1f)) { temperature = it }
                     Column {
                         Spacer(Modifier.height(8.dp))
                         Switch(checked = applyMask, onCheckedChange = { isChecked -> applyMask = isChecked })

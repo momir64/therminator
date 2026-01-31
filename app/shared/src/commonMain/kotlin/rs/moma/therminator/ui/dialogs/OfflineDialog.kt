@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -37,6 +38,7 @@ fun OfflineDialog(onRetry: () -> Unit) {
             modifier = Modifier
                 .background(CardColor, RoundedCornerShape(16.dp))
                 .padding(horizontal = 26.dp, vertical = 28.dp)
+                .widthIn(max = 360.dp)
                 .fillMaxWidth()
         ) {
             Spacer(Modifier.height(4.dp))

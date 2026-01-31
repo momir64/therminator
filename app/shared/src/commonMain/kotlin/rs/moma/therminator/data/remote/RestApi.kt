@@ -11,7 +11,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
 class RestApi(private val client: HttpClient) {
-    val baseUrl = "http://192.168.0.100:200"
+    val baseUrl = "https://therminator.moma.rs"
 
     suspend fun ping(): ResponseStatus = try {
         ResponseStatus.from(client.get(baseUrl).status)

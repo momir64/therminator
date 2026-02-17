@@ -1,10 +1,11 @@
 package rs.moma.therminator.ui.navigation
 
+import rs.moma.therminator.ui.screens.settings.camera.CameraScreen
+import rs.moma.therminator.ui.screens.settings.files.FilesScreen
 import rs.moma.therminator.ui.screens.settings.BatteryScreen
 import rs.moma.therminator.ui.screens.settings.DisplayScreen
 import rs.moma.therminator.ui.screens.settings.WeatherScreen
-import rs.moma.therminator.ui.screens.settings.CameraScreen
-import rs.moma.therminator.ui.screens.settings.FilesScreen
+import rs.moma.therminator.ui.screens.SettingsScreen
 import androidx.navigation.compose.composable
 import androidx.compose.animation.core.tween
 import androidx.navigation.NavHostController
@@ -14,7 +15,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.fadeIn
 import rs.moma.therminator.ui.screens.*
 import androidx.compose.ui.Modifier
-import rs.moma.therminator.ui.screens.SettingsScreen
 
 @Composable
 fun Navigation(modifier: Modifier = Modifier, navController: NavHostController, isLoggedIn: Boolean) {

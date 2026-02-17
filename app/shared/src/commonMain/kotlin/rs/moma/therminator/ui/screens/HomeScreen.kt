@@ -51,7 +51,7 @@ fun HomeScreen(navController: NavHostController) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(), start = 8.dp, end = 8.dp),
+                .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(), start = 12.dp, end = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {

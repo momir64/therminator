@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 import io.ktor.websocket.Frame
 import kotlinx.coroutines.Job
 
-class MainViewModel() : ViewModel(), KoinComponent {
+class MainViewModel : ViewModel(), KoinComponent {
     private val httpClientManager: HttpClientManager by inject()
     private val toastService: ToastService by inject()
     private val secureStore: SecureStore by inject()
@@ -56,7 +56,7 @@ class MainViewModel() : ViewModel(), KoinComponent {
                     println("Server unreachable")
                 }
 
-                Successful -> {
+                Successful, Unsuccessful -> {
                     _isServerOffline.value = false
                     connectBatteryWebSocket()
                 }

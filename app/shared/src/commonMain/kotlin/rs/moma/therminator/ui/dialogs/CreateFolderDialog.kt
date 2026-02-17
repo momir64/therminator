@@ -1,5 +1,6 @@
 package rs.moma.therminator.ui.dialogs
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.foundation.background
@@ -27,7 +28,11 @@ fun CreateFolderDialog(
             .background(Color.Black.copy(alpha = 0.6f))
             .padding(24.dp)
             .imePadding()
-            .clickable { onCancel() },
+            .clickable(
+                indication = null,
+                onClick = { onCancel() },
+                interactionSource = remember { MutableInteractionSource() }
+            ),
         contentAlignment = Alignment.Center
     ) {
         Column(

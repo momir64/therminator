@@ -65,7 +65,7 @@ import org.koin.compose.koinInject
 import kotlinx.coroutines.launch
 
 @Composable
-fun FilesScreen(navController: NavHostController) {
+fun FilesScreen(navController: NavHostController, topPadding: Int = 0) {
     val scope = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
     val mainViewModel = koinInject<MainViewModel>()
@@ -105,7 +105,7 @@ fun FilesScreen(navController: NavHostController) {
         }
     )
 
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().padding(top = topPadding.dp)) {
         Column(Modifier.fillMaxSize().imePadding()) {
             Row(
                 Modifier

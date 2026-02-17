@@ -1,5 +1,6 @@
 package rs.moma.therminator.ui.dialogs
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Arrangement
@@ -15,9 +16,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import rs.moma.therminator.ui.theme.CardColor
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Button
+import androidx.compose.runtime.remember
 import androidx.compose.material3.Text
 import rs.moma.therminator.ui.theme.*
 import androidx.compose.ui.Alignment
@@ -31,7 +34,12 @@ fun OfflineDialog(onRetry: () -> Unit) {
         modifier = Modifier
             .background(Color.Black.copy(alpha = 0.6f))
             .padding(24.dp)
-            .fillMaxSize(),
+            .fillMaxSize()
+            .clickable(
+                indication = null,
+                onClick = { onRetry() },
+                interactionSource = remember { MutableInteractionSource() }
+            ),
         contentAlignment = Alignment.Center
     ) {
         Column(

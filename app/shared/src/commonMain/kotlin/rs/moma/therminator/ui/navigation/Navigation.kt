@@ -17,7 +17,7 @@ import rs.moma.therminator.ui.screens.*
 import androidx.compose.ui.Modifier
 
 @Composable
-fun Navigation(modifier: Modifier = Modifier, navController: NavHostController, isLoggedIn: Boolean) {
+fun Navigation(modifier: Modifier = Modifier, navController: NavHostController, topPadding: Int = 0, isLoggedIn: Boolean) {
     NavHost(
         modifier = modifier,
         navController = navController,
@@ -27,13 +27,13 @@ fun Navigation(modifier: Modifier = Modifier, navController: NavHostController, 
         popEnterTransition = { fadeIn(animationSpec = tween(100)) },
         popExitTransition = { fadeOut(animationSpec = tween(100)) }
     ) {
-        composable<Screen.Login> { LoginScreen() }
-        composable<Screen.Home> { HomeScreen(navController) }
-        composable<Screen.Settings> { SettingsScreen(navController) }
-        composable<Screen.Files> { FilesScreen(navController) }
-        composable<Screen.Camera> { CameraScreen(navController) }
-        composable<Screen.Display> { DisplayScreen(navController) }
-        composable<Screen.Weather> { WeatherScreen(navController) }
-        composable<Screen.Battery> { BatteryScreen(navController) }
+        composable<Screen.Login> { LoginScreen(topPadding) }
+        composable<Screen.Home> { HomeScreen(navController, topPadding) }
+        composable<Screen.Settings> { SettingsScreen(navController, topPadding) }
+        composable<Screen.Files> { FilesScreen(navController, topPadding) }
+        composable<Screen.Camera> { CameraScreen(navController, topPadding) }
+        composable<Screen.Display> { DisplayScreen(navController, topPadding) }
+        composable<Screen.Weather> { WeatherScreen(navController, topPadding) }
+        composable<Screen.Battery> { BatteryScreen(navController, topPadding) }
     }
 }

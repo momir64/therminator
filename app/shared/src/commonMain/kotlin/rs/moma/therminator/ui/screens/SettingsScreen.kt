@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.dp
 
 
 @Composable
-fun SettingsScreen(navController: NavController) {
+fun SettingsScreen(navController: NavController, topPadding: Int = 0) {
     val lazyListState = rememberLazyListState()
     val options: List<Triple<String, Screen, DrawableResource>> = listOf(
         Triple("Files", Screen.Files, Res.drawable.ic_files),
@@ -54,7 +54,7 @@ fun SettingsScreen(navController: NavController) {
         Triple("Battery", Screen.Battery, Res.drawable.ic_battery)
     )
 
-    Column(Modifier.fillMaxSize().imePadding()) {
+    Column(Modifier.fillMaxSize().padding(top = topPadding.dp).imePadding()) {
         Row(
             Modifier
                 .fillMaxWidth()

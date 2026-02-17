@@ -17,7 +17,7 @@ fun main() {
     setupColors()
 
     ComposeViewport("compose-root") {
-        App()
+        App(8)
     }
 }
 

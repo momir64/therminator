@@ -25,8 +25,8 @@ import androidx.compose.ui.unit.dp
 
 
 @Composable
-fun DisplayScreen(navController: NavHostController) {
-    Box(Modifier.fillMaxSize().imePadding()) {
+fun DisplayScreen(navController: NavHostController, topPadding: Int = 0) {
+    Box(Modifier.fillMaxSize().padding(top = topPadding.dp).imePadding()) {
         Row(
             Modifier
                 .fillMaxWidth()

@@ -11,7 +11,7 @@ import org.koin.compose.koinInject
 import androidx.compose.runtime.*
 
 @Composable
-fun App() {
+fun App(topPadding: Int = 0) {
     val viewModel = koinInject<MainViewModel>()
     val navController = rememberNavController()
     val isLoggedIn by viewModel.isLoggedIn.collectAsState()
@@ -21,6 +21,7 @@ fun App() {
             isLoggedIn?.let {
                 Navigation(
                     navController = navController,
+                    topPadding = topPadding,
                     isLoggedIn = it
                 )
             }

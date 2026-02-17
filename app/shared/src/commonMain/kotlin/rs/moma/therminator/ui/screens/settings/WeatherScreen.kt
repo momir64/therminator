@@ -25,8 +25,8 @@ import androidx.compose.ui.unit.dp
 
 
 @Composable
-fun WeatherScreen(navController: NavHostController) {
-    Box(Modifier.fillMaxSize().imePadding()) {
+fun WeatherScreen(navController: NavHostController, topPadding: Int = 0) {
+    Box(Modifier.fillMaxSize().padding(top = topPadding.dp).imePadding()) {
         Row(
             Modifier
                 .fillMaxWidth()

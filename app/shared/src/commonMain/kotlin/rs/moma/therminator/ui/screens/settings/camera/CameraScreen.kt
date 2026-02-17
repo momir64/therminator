@@ -41,9 +41,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.koin.compose.koinInject
 
-
 @Composable
-fun CameraScreen(navController: NavHostController) {
+fun CameraScreen(navController: NavHostController, topPadding: Int = 0) {
     val focusManager = LocalFocusManager.current
     val mainViewModel = koinInject<MainViewModel>()
     val cameraViewModel = koinInject<CameraViewModel>()
@@ -70,8 +69,7 @@ fun CameraScreen(navController: NavHostController) {
     }
 
     Column(
-        Modifier
-            .fillMaxSize()
+        Modifier.fillMaxSize().padding(top = topPadding.dp)
             .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) }
     ) {
         Row(

@@ -42,12 +42,12 @@ import kotlin.math.roundToInt
 
 @Composable
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(navController: NavHostController, topPadding: Int = 0) {
     val vm = koinInject<MainViewModel>()
     val isServerOffline by vm.isServerOffline.collectAsState()
     val batteryInfo by vm.batteryInfo.collectAsState()
 
-    Box(Modifier.fillMaxSize().imePadding()) {
+    Box(Modifier.fillMaxSize().padding(top = topPadding.dp).imePadding()) {
         Row(
             Modifier
                 .fillMaxWidth()

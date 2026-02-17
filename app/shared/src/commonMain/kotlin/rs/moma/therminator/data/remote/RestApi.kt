@@ -61,7 +61,7 @@ class RestApi(private val client: HttpClient) {
                     append("path", path)
                     files.forEach { (fileName, fileData) ->
                         append("tracks", fileData, Headers.build {
-                            append(HttpHeaders.ContentDisposition, "filename=$fileName")
+                            append(HttpHeaders.ContentDisposition, "filename=\"$fileName\"")
                         })
                     }
                 }

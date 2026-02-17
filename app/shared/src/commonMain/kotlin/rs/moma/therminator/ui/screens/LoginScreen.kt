@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.material3.OutlinedTextField
 import rs.moma.therminator.viewmodels.MainViewModel
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.layout.padding
 import therminator.shared.generated.resources.Res
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -43,16 +44,14 @@ import org.koin.compose.koinInject
 
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(topPadding: Int = 0) {
     var password by remember { mutableStateOf("") }
     var show by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val vm = koinInject<MainViewModel>()
 
     Box(
-        Modifier
-            .fillMaxSize()
-            .imePadding()
+        Modifier.fillMaxSize().padding(top = topPadding.dp).imePadding()
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null

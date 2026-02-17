@@ -4,14 +4,18 @@ from sanic import Sanic, Request, Websocket
 from test import test as alarm_test
 from battery import BatterySensor
 from camera import ThermalCamera
+from sanic.request import File
 from audio import AudioPlayer
+from files import safe_path
 from sanic_cors import CORS
 import asyncio
 import base64
+import files
 import json
+import os
 
 CONFIG_FILE = "config.json"
-app = Sanic("SleepTherminator")
+app = Sanic("Therminator")
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 
@@ -23,6 +27,7 @@ async def config(server: Sanic):
         server.ctx.password = data["password"]
         server.ctx.config = data["config"]
         camera = data["config"]["camera"]
+        server.ctx.files_root = data["config"]["files"]["root"]
         server.ctx.camera = ThermalCamera(camera["mac"], camera["resolution"], camera["framerate"])
         server.ctx.player = AudioPlayer(data["config"]["speaker"]["mac"])
 
@@ -45,8 +50,8 @@ async def auth_middleware(request: Request):
 async def authenticate_ws(ws: Websocket, timeout: float = 5) -> bool:
     try:
         token = await asyncio.wait_for(ws.recv(), timeout=timeout)
-        decoded = base64.b64decode(token).decode()
-        if decoded != app.ctx.password:
+        if isinstance(token, bytes): token = token.decode()
+        if token is None or base64.b64decode(token).decode() != app.ctx.password:
             raise Exception("Forbidden")
     except Exception:
         await ws.close()
@@ -116,6 +121,64 @@ async def battery_ws(request: Request, ws: Websocket):
 @app.get("/test")
 async def test(request: Request):
     asyncio.create_task(alarm_test(app.ctx.player, app.ctx.camera, app.ctx.config["camera"]["threshold"]))
+    return empty()
+
+
+@app.get("/files")
+async def list_files(request: Request):
+    return json_response(files.scan(app.ctx.files_root))
+
+
+@app.post("/files/folder")
+async def create_folder(request: Request):
+    dir_path = safe_path(app.ctx.files_root, request.json.get("path", ""))
+    try:
+        os.mkdir(dir_path)
+    except FileExistsError:
+        return json_response({"error": "Directory already exists"}, status=400)
+    except FileNotFoundError:
+        return json_response({"error": "Parent folder does not exist"}, status=400)
+    except Exception as e:
+        return json_response({"error": str(e)}, status=400)
+    return empty()
+
+
+@app.post("/files/track")
+async def upload_tracks(request: Request):
+    if not request.files or "tracks" not in request.files:
+        return json_response({"error": "No tracks uploaded"}, status=400)
+    target_dir = safe_path(app.ctx.files_root, request.form.get("path", ""))
+    for track in request.files.getlist("tracks"):
+        if not isinstance(track, File): continue
+        try:
+            name, ext = os.path.splitext(track.name)
+            filepath, counter = os.path.join(target_dir, track.name), 2
+            while os.path.exists(filepath):
+                filepath = os.path.join(target_dir, f"{name}_{counter}{ext}")
+                counter += 1
+            with open(filepath, "wb") as file:
+                file.write(track.body)
+        except Exception as e:
+            return json_response({"error": f"Failed to save {track.name}: {e}"}, status=400)
+    return empty()
+
+
+@app.delete("/files")
+async def delete_files(request: Request):
+    paths = request.json
+    if not paths: return json_response({"error": "No paths provided"}, status=400)
+    for path in paths:
+        target = safe_path(app.ctx.files_root, path)
+        try:
+            if os.path.isfile(target):
+                os.remove(target)
+            elif os.path.isdir(target):
+                import shutil
+                shutil.rmtree(target)
+        except FileNotFoundError:
+            return json_response({"error": f"Path not found: {path}"}, status=400)
+        except Exception as e:
+            return json_response({"error": f"Failed to delete {path}: {e}"}, status=400)
     return empty()
 
 

@@ -5,6 +5,7 @@ import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.compose.material3.CircularProgressIndicator
 import therminator.shared.generated.resources.ic_add_tracks
 import androidx.compose.foundation.layout.asPaddingValues
 import rs.moma.therminator.ui.dialogs.ConfirmationDialog
@@ -45,6 +46,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.items
@@ -71,6 +73,7 @@ fun FilesScreen(navController: NavHostController, topPadding: Int = 0) {
     val mainViewModel = koinInject<MainViewModel>()
     val filesViewModel = koinInject<FilesViewModel>()
     val items by filesViewModel.items.collectAsState()
+    val isLoading by filesViewModel.isLoading.collectAsState()
     val isSelectOn by filesViewModel.isSelectOn.collectAsState()
     val currentPath by filesViewModel.currentPath.collectAsState()
     val isRefreshing by filesViewModel.isRefreshing.collectAsState()
@@ -175,6 +178,15 @@ fun FilesScreen(navController: NavHostController, topPadding: Int = 0) {
                 Spacer(Modifier.width(12.dp))
                 Text("Add tracks", fontSize = 16.sp, color = Color.White)
             }
+        }
+    }
+
+    if (isLoading) {
+        Box(
+            Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = Color.White)
         }
     }
 

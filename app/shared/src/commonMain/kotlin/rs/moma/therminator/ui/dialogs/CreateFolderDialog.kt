@@ -2,7 +2,11 @@ package rs.moma.therminator.ui.dialogs
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -45,6 +49,8 @@ fun CreateFolderDialog(
             OutlinedTextField(
                 value = folderName,
                 onValueChange = { folderName = it },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { if (isValid) onCreate(folderName.text) }),
                 label = { Text("Folder name") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()

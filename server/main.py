@@ -1,7 +1,6 @@
 from sanic.exceptions import Unauthorized, WebsocketClosed
 from sanic.response import empty, json as json_response
 from sanic import Sanic, Request, Websocket
-from test import test as alarm_test
 from battery import BatterySensor
 from camera import ThermalCamera
 from sanic.request import File
@@ -11,9 +10,11 @@ from sanic_cors import CORS
 import asyncio
 import base64
 import files
+import httpx
 import json
 import os
 
+ALARMS_FILE = "alarms.json"
 CONFIG_FILE = "config.json"
 app = Sanic("Therminator")
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -25,11 +26,14 @@ async def config(server: Sanic):
     with open(CONFIG_FILE) as file:
         data = json.load(file)
         server.ctx.password = data["password"]
+        server.ctx.google_key = data["key"]
         server.ctx.config = data["config"]
         camera = data["config"]["camera"]
         server.ctx.files_root = data["config"]["files"]["root"]
         server.ctx.camera = ThermalCamera(camera["mac"], camera["resolution"], camera["framerate"])
         server.ctx.player = AudioPlayer(data["config"]["speaker"]["mac"])
+    with open(ALARMS_FILE) as file:
+        server.ctx.alarms = json.load(file)
 
 
 @app.middleware("request")
@@ -85,6 +89,7 @@ async def update_camera_settings(request: Request):
     with open(CONFIG_FILE, "w") as file:
         json.dump({
             "password": app.ctx.password,
+            "key": app.ctx.google_key,
             "config": app.ctx.config,
         }, file, indent=4)
 
@@ -93,8 +98,7 @@ async def update_camera_settings(request: Request):
 
 @app.websocket("/camera")
 async def camera_ws(request: Request, ws: Websocket):
-    if not await authenticate_ws(ws):
-        return
+    if not await authenticate_ws(ws): return
     queue = app.ctx.camera.get_queue()
     try:
         while True:
@@ -106,8 +110,7 @@ async def camera_ws(request: Request, ws: Websocket):
 
 @app.websocket("/battery")
 async def battery_ws(request: Request, ws: Websocket):
-    if not await authenticate_ws(ws):
-        return
+    if not await authenticate_ws(ws): return
     try:
         while True:
             is_charging = app.ctx.battery.is_charging()
@@ -116,12 +119,6 @@ async def battery_ws(request: Request, ws: Websocket):
             await asyncio.sleep(3)
     except WebsocketClosed:
         pass
-
-
-@app.get("/test")
-async def test(request: Request):
-    asyncio.create_task(alarm_test(app.ctx.player, app.ctx.camera, app.ctx.config["camera"]["threshold"]))
-    return empty()
 
 
 @app.get("/files")
@@ -179,6 +176,89 @@ async def delete_files(request: Request):
             return json_response({"error": f"Path not found: {path}"}, status=400)
         except Exception as e:
             return json_response({"error": f"Failed to delete {path}: {e}"}, status=400)
+    return empty()
+
+
+@app.get("/alarms")
+async def get_alarms(request: Request):
+    return json_response(app.ctx.alarms)
+
+
+@app.post("/alarms")
+async def update_alarms(request: Request):
+    new_alarm = request.json
+    idx = next((index for index, alarm in enumerate(app.ctx.alarms) if alarm["id"] == new_alarm.get("id")), None)
+    if idx is not None:
+        app.ctx.alarms[idx] = new_alarm
+    else:
+        new_alarm["id"] = max((alarm["id"] + 1 for alarm in app.ctx.alarms), default=0)
+        app.ctx.alarms.append(new_alarm)
+    with open(ALARMS_FILE, "w") as file:
+        json.dump(app.ctx.alarms, file, indent=4)
+    return empty()
+
+
+@app.delete("/alarms")
+async def delete_alarms(request: Request):
+    alarm_id = request.json["id"]
+    app.ctx.alarms = [alarm for alarm in app.ctx.alarms if alarm["id"] != alarm_id]
+    with open(ALARMS_FILE, "w") as file:
+        json.dump(app.ctx.alarms, file, indent=4)
+    return empty()
+
+
+@app.get("/weather/geocode", name="geocode_no_param")
+@app.get("/weather/geocode/<location>", name="geocode_with_param")
+async def geocode_location(request: Request, location: str = None):
+    if location is None: return json_response({"location": ""})
+    url = f"https://maps.googleapis.com/maps/api/geocode/json?address={location}&key={app.ctx.google_key}"
+    async with httpx.AsyncClient() as client:
+        response = (await client.get(url)).json()
+    return json_response({
+        "location": response["results"][0]["formatted_address"],
+        "latitude": response["results"][0]["geometry"]["location"]["lat"],
+        "longitude": response["results"][0]["geometry"]["location"]["lng"],
+    })
+
+
+@app.get("/weather")
+async def get_location(request: Request):
+    return json_response(app.ctx.config["weather"])
+
+
+@app.post("/weather")
+async def update_location(request: Request):
+    body = request.json
+    app.ctx.config["weather"]["location"] = body["location"] if "location" in body else ""
+    for key in ["latitude", "longitude"]:
+        if key in body:
+            app.ctx.config["weather"][key] = body[key]
+        else:
+            app.ctx.config["weather"].pop(key, None)
+    with open(CONFIG_FILE, "w") as file:
+        json.dump({
+            "password": app.ctx.password,
+            "key": app.ctx.google_key,
+            "config": app.ctx.config,
+        }, file, indent=4)
+    return empty()
+
+
+@app.get("/display")
+async def get_display(request: Request):
+    return json_response(app.ctx.config["display"])
+
+
+@app.post("/display")
+async def update_display(request: Request):
+    body = request.json
+    app.ctx.config["display"]["brightness"] = body["brightness"]
+    with open(CONFIG_FILE, "w") as file:
+        json.dump({
+            "password": app.ctx.password,
+            "key": app.ctx.google_key,
+            "config": app.ctx.config,
+        }, file, indent=4)
     return empty()
 
 

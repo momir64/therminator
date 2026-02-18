@@ -4,12 +4,12 @@ from sanic import Sanic, Request, Websocket
 from files import safe_path, valid_tracks
 from battery import BatterySensor
 from camera import ThermalCamera
-from sound_test import SoundTest
 from sanic.request import File
 from audio import AudioPlayer
 from sanic_cors import CORS
 import asyncio
 import base64
+import random
 import files
 import httpx
 import json
@@ -27,14 +27,12 @@ async def config(server: Sanic):
     with open(CONFIG_FILE) as file:
         data = json.load(file)
         server.ctx.password = data["password"]
-        server.ctx.default = data["default"]
         server.ctx.google_key = data["key"]
         server.ctx.config = data["config"]
         camera = data["config"]["camera"]
         server.ctx.files_root = data["config"]["files"]["root"]
         server.ctx.camera = ThermalCamera(camera["mac"], camera["resolution"], camera["framerate"])
         server.ctx.player = AudioPlayer(data["config"]["speaker"]["mac"])
-        server.ctx.sound_test = SoundTest(server.ctx.player, server.ctx.files_root, data["default"])
     with open(ALARMS_FILE) as file:
         server.ctx.alarms = json.load(file)
 
@@ -92,7 +90,6 @@ async def update_camera_settings(request: Request):
     with open(CONFIG_FILE, "w") as file:
         json.dump({
             "password": app.ctx.password,
-            "default": app.ctx.default,
             "key": app.ctx.google_key,
             "config": app.ctx.config,
         }, file, indent=4)
@@ -215,8 +212,13 @@ async def delete_alarms(request: Request):
 @app.post("/alarms/test")
 async def test_alarm(request: Request):
     alarm = request.json
-    alarm["tracks"] = valid_tracks(app.ctx.sound_test.root_path, alarm.get("tracks", []))
-    asyncio.ensure_future(app.ctx.sound_test.test(alarm))
+    if await app.ctx.player.is_playing():
+        await app.ctx.player.stop()
+        return empty()
+    default = app.ctx.config["files"]["default"]
+    alarm["tracks"] = valid_tracks(app.ctx.files_root, alarm.get("tracks", []))
+    track = app.ctx.files_root + random.choice(alarm["tracks"]) if alarm["tracks"] else default
+    await app.ctx.player.play(track, alarm["volume"], alarm["speaker"] == "REMOTE")
     return empty()
 
 
@@ -251,7 +253,6 @@ async def update_location(request: Request):
     with open(CONFIG_FILE, "w") as file:
         json.dump({
             "password": app.ctx.password,
-            "default": app.ctx.default,
             "key": app.ctx.google_key,
             "config": app.ctx.config,
         }, file, indent=4)
@@ -270,7 +271,6 @@ async def update_display(request: Request):
     with open(CONFIG_FILE, "w") as file:
         json.dump({
             "password": app.ctx.password,
-            "default": app.ctx.default,
             "key": app.ctx.google_key,
             "config": app.ctx.config,
         }, file, indent=4)

@@ -28,7 +28,7 @@ def scan(root):
         for item_name, item_type in items:
             item_name = item_name.decode() if isinstance(item_name, bytes) else item_name
             item_info = {"id": id, "name": item_name, "type": item_type, "path": item_path}
-            if item_type == "FILE" and item_name.lower().endswith((".mp3", ".flac", ".wav", ".m4a")):
+            if item_type == "FILE" and item_name.lower().endswith((".mp3", ".flac", ".wav", ".m4a", ".ogg")):
                 try:
                     audio = MutagenFile(os.path.join(current, item_name), easy=True)
                     item_info.update({
@@ -38,6 +38,7 @@ def scan(root):
                     })
                 except Exception:
                     item_info.update({"title": item_name, "artist": "Unknown", "duration": "0"})
-            result.append(item_info)
-            id += 1
+            if item_type == "FOLDER" or "title" in item_info:
+                result.append(item_info)
+                id += 1
     return result

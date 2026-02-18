@@ -40,7 +40,7 @@ class AudioPlayer:
         await self.stop()
         factor = max(1, min(self._MAX_AMPLITUDE, self._MAX_AMPLITUDE * volume // 100))
         device = self._BLUETOOTH_DEVICE if bluetooth else self._LOCAL_DEVICE
-        if not bluetooth: factor = int(factor * 0.2)
+        if not bluetooth: factor = int(factor * 0.15)
         await self._play_on_device(device, filename, factor)
         if bluetooth:
             asyncio.create_task(self._handle_bluetooth_fallback(filename, factor))

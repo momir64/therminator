@@ -1,10 +1,10 @@
 {
     "password": "",
     "key": "",
-    "default": "/default.mp3",
     "config": {
         "files": {
-            "root": "/root/Desktop/therminator/server/files"
+            "root": "/root/Desktop/therminator/server/files",
+            "default": "/root/Desktop/therminator/server/default.mp3"
         },
         "weather": {
             "location": "Novi Sad, Serbia",

@@ -6,12 +6,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import org.jetbrains.compose.resources.painterResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
-import therminator.shared.generated.resources.ic_back
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.padding
 import therminator.shared.generated.resources.Res
 import rs.moma.therminator.ui.theme.OutlineColor
+import therminator.shared.generated.resources.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.IconButton

@@ -1,25 +1,9 @@
 package rs.moma.therminator.ui.utils
 
-import therminator.shared.generated.resources.ic_battery_charging_0
-import therminator.shared.generated.resources.ic_battery_charging_1
-import therminator.shared.generated.resources.ic_battery_charging_2
-import therminator.shared.generated.resources.ic_battery_charging_3
-import therminator.shared.generated.resources.ic_battery_charging_4
-import therminator.shared.generated.resources.ic_battery_charging_5
-import therminator.shared.generated.resources.ic_battery_charging_6
-import therminator.shared.generated.resources.ic_battery_charging_7
-import therminator.shared.generated.resources.ic_no_battery
-import therminator.shared.generated.resources.ic_battery_0
-import therminator.shared.generated.resources.ic_battery_1
-import therminator.shared.generated.resources.ic_battery_2
-import therminator.shared.generated.resources.ic_battery_3
-import therminator.shared.generated.resources.ic_battery_4
-import therminator.shared.generated.resources.ic_battery_5
-import therminator.shared.generated.resources.ic_battery_6
-import therminator.shared.generated.resources.ic_battery_7
 import org.jetbrains.compose.resources.DrawableResource
 import rs.moma.therminator.data.models.BatteryInfo
 import therminator.shared.generated.resources.Res
+import therminator.shared.generated.resources.*
 
 object BatteryIconProvider {
     fun get(batteryInfo: BatteryInfo?): DrawableResource {

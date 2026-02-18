@@ -1,7 +1,7 @@
 package rs.moma.therminator.ui.navigation
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerialName
 
 @Serializable
 sealed class Screen() {
@@ -12,6 +12,14 @@ sealed class Screen() {
     @Serializable
     @SerialName("home")
     data object Home : Screen()
+
+    @Serializable
+    @SerialName("alarm")
+    data object Alarm : Screen()
+
+    @Serializable
+    @SerialName("trackSelector")
+    data object TrackSelector : Screen()
 
     @Serializable
     @SerialName("settings")

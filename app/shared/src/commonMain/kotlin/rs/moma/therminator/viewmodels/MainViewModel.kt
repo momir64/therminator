@@ -109,11 +109,4 @@ class MainViewModel : ViewModel(), KoinComponent {
         AuthProvider.password = null
         _isLoggedIn.value = false
     }
-
-    fun test() = viewModelScope.launch {
-        when (api.runTest()) {
-            Successful -> toastService.show("Test started successfully")
-            else -> toastService.show("Test failed to start")
-        }
-    }
 }

@@ -8,3 +8,5 @@ fun naturalCompare(firstString: String, secondString: String): Int {
         else firstPart.compareTo(secondPart, ignoreCase = true)
     }.firstOrNull { it != 0 } ?: firstString.length.compareTo(secondString.length)
 }
+
+fun Int.pad(length: Int = 2, padChar: Char = '0') = toString().padStart(length, padChar)

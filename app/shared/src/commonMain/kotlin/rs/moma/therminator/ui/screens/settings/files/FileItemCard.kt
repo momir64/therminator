@@ -4,7 +4,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.foundation.shape.RoundedCornerShape
-import therminator.shared.generated.resources.ic_folder
 import androidx.compose.foundation.layout.fillMaxWidth
 import org.jetbrains.compose.resources.painterResource
 import androidx.compose.foundation.layout.Arrangement
@@ -16,20 +15,21 @@ import therminator.shared.generated.resources.Res
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import rs.moma.therminator.ui.theme.OutlineColor
 import androidx.compose.foundation.layout.width
 import rs.moma.therminator.data.models.FileItem
-import rs.moma.therminator.ui.theme.ButtonColor
+import therminator.shared.generated.resources.*
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CardDefaults
 import androidx.compose.foundation.layout.Row
-import rs.moma.therminator.ui.theme.CardColor
+import androidx.compose.material3.Checkbox
 import androidx.compose.runtime.Composable
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.remember
+import rs.moma.therminator.ui.utils.pad
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import rs.moma.therminator.ui.theme.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
@@ -40,7 +40,9 @@ import androidx.compose.ui.unit.sp
 fun FileItemCard(
     item: FileItem,
     onClick: () -> Unit,
-    onLongClick: () -> Unit
+    onLongClick: () -> Unit = {},
+    onCheckClicked: (Boolean) -> Unit = {},
+    checked: Boolean? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     Card(
@@ -54,40 +56,51 @@ fun FileItemCard(
                 onClick = onClick,
                 onLongClick = onLongClick
             ),
-        colors = CardDefaults.cardColors(containerColor = if (item.selected) ButtonColor.copy(alpha = 0.8f) else CardColor)
+        colors = CardDefaults.cardColors(containerColor = if (item.selected) ButtonColor2 else CardColor)
     ) {
         Row(
             Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (item.type == FileItemType.FOLDER) {
-                Icon(
-                    painterResource(Res.drawable.ic_folder),
-                    contentDescription = item.name,
-                    Modifier.size(28.dp),
-                    tint = OutlineColor
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(item.name, modifier = Modifier.padding(8.dp))
-            } else {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth().padding(start = 4.dp)
-                ) {
-                    println(item)
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().padding(start = 4.dp)
+            ) {
+                if (item.type == FileItemType.FOLDER) {
+                    Row(
+                        Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            painterResource(Res.drawable.ic_folder),
+                            contentDescription = item.name,
+                            Modifier.size(28.dp),
+                            tint = OutlineColor
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(item.name, modifier = Modifier.padding(8.dp))
+                    }
+                    if (checked != null) Checkbox(checked = checked, onCheckedChange = onCheckClicked)
+                } else {
+
                     Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
                         Text(item.title, fontSize = 16.sp, fontWeight = Bold, maxLines = 1, overflow = Ellipsis)
                         Spacer(Modifier.height(2.dp))
                         Text(item.artist, fontSize = 14.sp, maxLines = 1, overflow = Ellipsis)
                     }
-                    Text(
-                        "${item.duration / 60}:${(item.duration % 60).toString().padStart(2, '0')}",
-                        modifier = Modifier.padding(4.dp),
-                        fontSize = 14.sp
-                    )
+                    if (checked != null) {
+                        Checkbox(checked = checked, onCheckedChange = onCheckClicked)
+                    } else {
+                        Text(
+                            "${item.duration / 60}:${(item.duration % 60).pad()}",
+                            modifier = Modifier.padding(4.dp),
+                            fontSize = 14.sp
+                        )
+                    }
                 }
             }
+
         }
     }
 }

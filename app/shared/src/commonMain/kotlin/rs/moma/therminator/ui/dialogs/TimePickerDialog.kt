@@ -2,21 +2,26 @@ package rs.moma.therminator.ui.dialogs
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import rs.moma.therminator.ui.theme.CardColor
 import androidx.compose.foundation.clickable
+import androidx.compose.material3.TimePicker
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Button
@@ -26,18 +31,25 @@ import rs.moma.therminator.ui.theme.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 @Composable
-fun OfflineDialog(onRetry: () -> Unit) {
+@OptIn(ExperimentalMaterial3Api::class)
+fun TimePickerDialog(
+    initialHour: Int,
+    initialMinute: Int,
+    onConfirm: (hour: Int, minute: Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val timePickerState = rememberTimePickerState(initialHour, initialMinute, true)
+
     Box(
         modifier = Modifier
+            .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.6f))
             .padding(24.dp)
-            .fillMaxSize()
             .clickable(
                 indication = null,
-                onClick = { onRetry() },
+                onClick = { onDismiss() },
                 interactionSource = remember { MutableInteractionSource() }
             ),
         contentAlignment = Alignment.Center
@@ -54,23 +66,38 @@ fun OfflineDialog(onRetry: () -> Unit) {
                     interactionSource = remember { MutableInteractionSource() }
                 )
         ) {
-            Spacer(Modifier.height(4.dp))
-            Text("Server is unreachable", fontSize = 24.sp)
-            Spacer(Modifier.height(14.dp))
-            Text(
-                "We were unable to reach the server, please try again later.",
-                fontSize = 18.sp,
-                color = OutlineColor
+            Spacer(Modifier.height(16.dp))
+            TimePicker(
+                state = timePickerState,
+                colors = TimePickerDefaults.colors(
+                    selectorColor = AccentColor,
+                    clockDialColor = ButtonColor2,
+                    clockDialSelectedContentColor = Color.White,
+                    clockDialUnselectedContentColor = PrimaryColor,
+                    timeSelectorSelectedContentColor = Color.White,
+                    timeSelectorSelectedContainerColor = AccentColor,
+                    timeSelectorUnselectedContentColor = PrimaryColor,
+                    timeSelectorUnselectedContainerColor = ButtonColor2,
+                )
             )
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(16.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Button(
+                    colors = ButtonDefaults.buttonColors(containerColor = ButtonColor),
+                    modifier = Modifier.size(96.dp, 42.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    onClick = onDismiss
+                ) {
+                    Text("Cancel", color = Color.White)
+                }
+                Spacer(Modifier.width(12.dp))
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = AccentColor),
                     modifier = Modifier.size(96.dp, 42.dp),
                     shape = RoundedCornerShape(8.dp),
-                    onClick = onRetry
+                    onClick = { onConfirm(timePickerState.hour, timePickerState.minute) }
                 ) {
-                    Text("Retry", color = Color.White)
+                    Text("OK", color = Color.White)
                 }
             }
         }

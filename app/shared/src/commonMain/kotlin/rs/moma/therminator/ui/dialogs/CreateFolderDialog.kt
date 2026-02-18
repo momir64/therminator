@@ -45,6 +45,11 @@ fun CreateFolderDialog(
                 .padding(horizontal = 26.dp, vertical = 28.dp)
                 .widthIn(max = 360.dp)
                 .fillMaxWidth()
+                .clickable(
+                    indication = null,
+                    onClick = {},
+                    interactionSource = remember { MutableInteractionSource() }
+                )
         ) {
             OutlinedTextField(
                 value = folderName,

@@ -1,10 +1,12 @@
 package rs.moma.therminator.ui.navigation
 
 import rs.moma.therminator.ui.screens.settings.camera.CameraScreen
+import rs.moma.therminator.ui.screens.alarms.TrackSelectorScreen
 import rs.moma.therminator.ui.screens.settings.files.FilesScreen
 import rs.moma.therminator.ui.screens.settings.BatteryScreen
 import rs.moma.therminator.ui.screens.settings.DisplayScreen
 import rs.moma.therminator.ui.screens.settings.WeatherScreen
+import rs.moma.therminator.ui.screens.alarms.AlarmScreen
 import rs.moma.therminator.ui.screens.SettingsScreen
 import androidx.navigation.compose.composable
 import androidx.compose.animation.core.tween
@@ -29,6 +31,8 @@ fun Navigation(modifier: Modifier = Modifier, navController: NavHostController, 
     ) {
         composable<Screen.Login> { LoginScreen(topPadding) }
         composable<Screen.Home> { HomeScreen(navController, topPadding) }
+        composable<Screen.Alarm> { AlarmScreen(navController, topPadding) }
+        composable<Screen.TrackSelector> { TrackSelectorScreen(navController, topPadding) }
         composable<Screen.Settings> { SettingsScreen(navController, topPadding) }
         composable<Screen.Files> { FilesScreen(navController, topPadding) }
         composable<Screen.Camera> { CameraScreen(navController, topPadding) }

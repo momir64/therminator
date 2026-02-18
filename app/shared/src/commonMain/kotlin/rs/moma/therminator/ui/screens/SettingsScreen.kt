@@ -3,22 +3,17 @@ package rs.moma.therminator.ui.screens
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.asPaddingValues
-import therminator.shared.generated.resources.ic_battery
-import therminator.shared.generated.resources.ic_display
-import therminator.shared.generated.resources.ic_weather
 import androidx.compose.foundation.layout.PaddingValues
 import org.jetbrains.compose.resources.DrawableResource
-import therminator.shared.generated.resources.ic_camera
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import org.jetbrains.compose.resources.painterResource
-import therminator.shared.generated.resources.ic_enter
-import therminator.shared.generated.resources.ic_files
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
-import therminator.shared.generated.resources.ic_back
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.statusBars
+import rs.moma.therminator.ui.dialogs.OfflineDialog
+import rs.moma.therminator.viewmodels.MainViewModel
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.layout.padding
 import therminator.shared.generated.resources.Res
@@ -27,12 +22,15 @@ import androidx.compose.foundation.layout.Spacer
 import rs.moma.therminator.ui.theme.OutlineColor
 import androidx.compose.foundation.layout.width
 import rs.moma.therminator.ui.navigation.Screen
+import therminator.shared.generated.resources.*
 import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavController
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -41,17 +39,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.koin.compose.koinInject
 
 
 @Composable
 fun SettingsScreen(navController: NavController, topPadding: Int = 0) {
+    val mainViewModel = koinInject<MainViewModel>()
+    val isServerOffline by mainViewModel.isServerOffline.collectAsState()
+
     val lazyListState = rememberLazyListState()
     val options: List<Triple<String, Screen, DrawableResource>> = listOf(
         Triple("Files", Screen.Files, Res.drawable.ic_files),
         Triple("Camera", Screen.Camera, Res.drawable.ic_camera),
         Triple("Display", Screen.Display, Res.drawable.ic_display),
-        Triple("Weather", Screen.Weather, Res.drawable.ic_weather),
-        Triple("Battery", Screen.Battery, Res.drawable.ic_battery)
+//        Triple("Weather", Screen.Weather, Res.drawable.ic_weather),
+//        Triple("Battery", Screen.Battery, Res.drawable.ic_battery)
     )
 
     Column(Modifier.fillMaxSize().padding(top = topPadding.dp).imePadding()) {
@@ -103,4 +105,7 @@ fun SettingsScreen(navController: NavController, topPadding: Int = 0) {
             }
         }
     }
+
+    if (isServerOffline)
+        OfflineDialog { mainViewModel.login() }
 }

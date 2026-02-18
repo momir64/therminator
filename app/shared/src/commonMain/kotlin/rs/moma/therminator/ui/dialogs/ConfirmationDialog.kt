@@ -54,6 +54,11 @@ fun ConfirmationDialog(
                 .padding(horizontal = 26.dp, vertical = 28.dp)
                 .widthIn(max = 360.dp)
                 .fillMaxWidth()
+                .clickable(
+                    indication = null,
+                    onClick = {},
+                    interactionSource = remember { MutableInteractionSource() }
+                )
         ) {
             Spacer(Modifier.height(4.dp))
             Text(title, fontSize = 24.sp)

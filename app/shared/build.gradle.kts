@@ -46,6 +46,7 @@ kotlin {
         implementation(libs.navigation.compose)
         implementation(libs.compose.foundation)
         implementation(libs.compose.material3)
+        implementation(libs.kotlinx.datetime)
         implementation(libs.ktor.client.core)
         implementation(libs.compose.runtime)
         implementation(libs.filekit.compose)

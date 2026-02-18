@@ -17,9 +17,11 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.core.component.inject
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.isActive
 import io.ktor.websocket.readText
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import io.ktor.websocket.Frame
 import kotlinx.coroutines.Job
 
@@ -70,19 +72,23 @@ class MainViewModel : ViewModel(), KoinComponent {
         if (batteryWsJob?.isActive == true) return
         val header = AuthProvider.getHeaderValue() ?: return
         batteryWsJob = viewModelScope.launch {
-            try {
-                val wsBaseUrl = api.baseUrl.replaceFirst("http", "ws")
-                httpClient.webSocket("${wsBaseUrl}/battery") {
-                    send(Frame.Text(header))
-                    for (frame in incoming)
-                        if (frame is Frame.Text)
-                            _batteryInfo.emit(BatteryInfo(frame.readText()))
+            while (isActive) {
+                try {
+                    val wsBaseUrl = api.baseUrl.replaceFirst("http", "ws")
+                    httpClient.webSocket("${wsBaseUrl}/battery") {
+                        _isServerOffline.value = false
+                        send(Frame.Text(header))
+                        for (frame in incoming)
+                            if (frame is Frame.Text)
+                                _batteryInfo.emit(BatteryInfo(frame.readText()))
+                    }
+                } catch (e: Exception) {
+                    println("Battery WebSocket error: $e")
+                    if (e.message != "Software caused connection abort")
+                        _isServerOffline.value = true
                 }
-            } catch (e: Exception) {
-                println("Battery WebSocket error: $e")
-            } finally {
-                _isServerOffline.value = true
-                batteryWsJob = null
+
+                delay(1000)
             }
         }
     }

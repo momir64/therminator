@@ -40,6 +40,7 @@ class AudioPlayer:
         await self.stop()
         factor = max(1, min(self._MAX_AMPLITUDE, self._MAX_AMPLITUDE * volume // 100))
         device = self._BLUETOOTH_DEVICE if bluetooth else self._LOCAL_DEVICE
+        if not bluetooth: factor = int(factor * 0.2)
         await self._play_on_device(device, filename, factor)
         if bluetooth:
             asyncio.create_task(self._handle_bluetooth_fallback(filename, factor))
@@ -68,31 +69,16 @@ class AudioPlayer:
         proc = await asyncio.create_subprocess_exec("pkill", "-f", "mpg123", stdout=self._DEVNULL, stderr=self._DEVNULL)
         await proc.wait()
 
+    async def is_playing(self):
+        proc = await asyncio.create_subprocess_exec("pgrep", "-f", "mpg123", stdout=self._DEVNULL, stderr=self._DEVNULL)
+        return await proc.wait() == 0
+
     async def cleanup(self):
         await self.stop()
-        GPIO.cleanup()
+        # GPIO.cleanup()
         if self._bluetooth_task:
             self._bluetooth_task.cancel()
             try:
                 await self._bluetooth_task
             except asyncio.CancelledError:
                 pass
-
-# async def main():
-#     player = AudioPlayer("8C:A2:CE:18:78:22")
-#     await player.play("files/test.mp3", volume=50, bluetooth=True)
-#     print("Playback started asynchronously")
-#     await asyncio.sleep(20)
-#     await player.stop()
-#     print("Playback stopped")
-#     await asyncio.sleep(2)
-#     await player.play("files/test.mp3", volume=50, bluetooth=False)
-#     print("Playback started asynchronously")
-#     await asyncio.sleep(2)
-#     await player.stop()
-#     print("Playback stopped")
-#     await player.cleanup()
-#
-#
-# if __name__ == "__main__":
-#     asyncio.run(main())

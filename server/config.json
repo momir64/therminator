@@ -1,6 +1,7 @@
 {
     "password": "",
     "key": "",
+    "default": "/default.mp3",
     "config": {
         "files": {
             "root": "/root/Desktop/therminator/server/files"

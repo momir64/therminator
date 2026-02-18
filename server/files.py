@@ -8,6 +8,15 @@ def safe_path(base: str, user_path: str | None) -> str:
     return abs_path if abs_path.startswith(os.path.abspath(base) + os.sep) else base
 
 
+def valid_tracks(root: str, tracks: list) -> list:
+    result = []
+    for track in tracks:
+        full_path = os.path.realpath(os.path.join(root, track.lstrip(os.sep)))
+        if os.path.commonpath([root, full_path]) == root and os.path.isfile(full_path):
+            result.append(track)
+    return result
+
+
 def scan(root):
     root, result, id = os.fspath(root), [], 0
     if isinstance(root, bytes): root = root.decode()

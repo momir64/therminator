@@ -17,7 +17,7 @@
     {
         "id": 1,
         "name": "",
-        "active": true,
+        "active": false,
         "days": [],
         "hours": 4,
         "minutes": 0,
@@ -71,7 +71,7 @@
             1,
             0
         ],
-        "hours": 19,
+        "hours": 21,
         "minutes": 7,
         "volume": 50,
         "speaker": "REMOTE",
@@ -79,5 +79,24 @@
             "/test.mp3",
             "/Sapphire.mp3"
         ]
+    },
+    {
+        "id": 10,
+        "name": "",
+        "active": true,
+        "days": [
+            3,
+            4,
+            5,
+            6,
+            2,
+            1,
+            0
+        ],
+        "hours": 21,
+        "minutes": 6,
+        "volume": 50,
+        "speaker": "REMOTE",
+        "tracks": []
     }
 ]

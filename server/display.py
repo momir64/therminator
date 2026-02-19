@@ -26,6 +26,8 @@ CONFIG_FILE = f"{WORKING_DIR}/config.json"
 ALARMS_FILE = f"{WORKING_DIR}/alarms.json"
 ICONS_DIR = f"{WORKING_DIR}/icons"
 NEXT_ALARM_DISPLAY_DURATION = 3200
+CAMERA_DISMISS_ALARM_TIMEOUT = 30
+CAMERA_UNAVAILABLE_TIMEOUT = 10
 BOUNCE_TIME = 50
 BUTTON_PIN = 16
 
@@ -52,6 +54,7 @@ class Display:
         self.task_queue = queue.Queue()
         self.battery = BatterySensor()
         self.showing_next_alarm = False
+        self.camera_dismiss_task = None
         self.speaker_address = None
         self.testing_alarm = False
         self.active_alarm = None
@@ -98,15 +101,16 @@ class Display:
 
     def button_pressed(self):
         if self.active_alarm is not None:
-            self.task_queue.put(self.dismiss_alarm)
+            self.task_queue.put(self.silence_and_watch)
         elif self.testing_alarm:
-            self.task_queue.put(self.dismiss_alarm)
+            self.task_queue.put(self.silence_alarm)
         else:
             self.task_queue.put(self.show_next_alarm)
 
-    def dismiss_alarm(self):
-        self.active_alarm = None
+    def silence_and_watch(self):
         self.silence_alarm()
+        if self.camera_dismiss_task is None or self.camera_dismiss_task.done():
+            self.camera_dismiss_task = asyncio.run_coroutine_threadsafe(self.watch_camera(), self.loop)
 
     def silence_alarm(self):
         self.testing_alarm = False
@@ -114,13 +118,39 @@ class Display:
         with open(SOUND_TEST_FILE, "w") as file:
             json.dump(None, file)
 
+    async def watch_camera(self):
+        alarm_id = self.active_alarm["id"]
+        alive = lambda: self.active_alarm is not None and self.active_alarm["id"] == alarm_id
+        writer = None
+        try:
+            reader, writer = await asyncio.open_unix_connection(self.camera_socket)
+            start = time.time()
+            frames = 0
+            while alive() and time.time() - start < CAMERA_DISMISS_ALARM_TIMEOUT:
+                line = await asyncio.wait_for(reader.readline(), timeout=CAMERA_UNAVAILABLE_TIMEOUT)
+                if not line: break
+                values = json.loads(line.decode().strip())
+                count = sum(1 for row in values for value in row if value >= self.camera_threshold["temperature"])
+                frames = frames + 1 if count >= self.camera_threshold["pixels"] else 0
+                if frames >= self.camera_threshold["frames"]:
+                    self.trigger_alarm(self.active_alarm)
+                    return
+        except (OSError, asyncio.TimeoutError):
+            if alive(): self.trigger_alarm(self.active_alarm)
+            return
+        finally:
+            if writer is not None: writer.close()
+        if alive(): self.active_alarm = None
+
     def trigger_alarm(self, alarm):
-        if self.active_alarm is not None:
-            asyncio.run_coroutine_threadsafe(self.player.stop(), self.loop)
+        async def _trigger(track):
+            await self.player.stop()
+            await self.player.play(track, alarm["volume"], alarm.get("speaker") == "REMOTE")
+
         self.active_alarm = alarm
         tracks = alarm.get("tracks", [])
-        track = self.files_root + random.choice(tracks) if tracks else self.default_track
-        asyncio.run_coroutine_threadsafe(self.player.play(track, alarm["volume"], alarm.get("speaker") == "REMOTE"), self.loop)
+        pick = self.files_root + random.choice(tracks) if tracks else self.default_track
+        asyncio.run_coroutine_threadsafe(_trigger(pick), self.loop)
 
     def check_alarms(self):
         now = datetime.datetime.now()
@@ -169,6 +199,8 @@ class Display:
             weather = config["weather"]
             brightness = config["display"]["brightness"]
             self.speaker_address = config["speaker"]["mac"]
+            self.camera_threshold = config["camera"]["threshold"]
+            self.camera_socket = config["camera"]["socket"]
             self.default_track = config["files"]["default"]
             self.files_root = config["files"]["root"]
             self.longitude = weather.get("longitude")

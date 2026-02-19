@@ -84,8 +84,10 @@ class MainViewModel : ViewModel(), KoinComponent {
                     }
                 } catch (e: Exception) {
                     println("Battery WebSocket error: $e")
-                    if (e.message != "Software caused connection abort")
+                    if (e.message != "Software caused connection abort" &&
+                        e.message != "Unable to resolve host \"therminator.moma.rs\": No address associated with hostname") {
                         _isServerOffline.value = true
+                    }
                 }
 
                 delay(1000)

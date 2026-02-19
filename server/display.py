@@ -46,7 +46,8 @@ class Display:
         self.task_queue = queue.Queue()
         self.battery = BatterySensor()
         self.showing_next_alarm = False
-        self.alarm_active = False
+        self.active_alarm = None
+        self.alarms = []
 
         self.time_font = font.Font(family="Jura", size=186, weight="bold")
         self.next_alarm_font = font.Font(family="Jura", size=56, weight="bold")
@@ -87,13 +88,12 @@ class Display:
         self.update()
 
     def button_pressed(self):
-        if not self.alarm_active:
+        if self.active_alarm is None:
             self.task_queue.put(self.show_next_alarm)
 
     def show_next_alarm(self):
         self.showing_next_alarm = True
-        sorted_alarms = sorted(self.alarms, key=lambda alarm: (not alarm["active"], alarm["hours"], alarm["minutes"]))
-        next_alarm = next((alarm for alarm in sorted_alarms if alarm["active"]), None)
+        next_alarm = self.get_next_alarm()
         if next_alarm is None:
             text = "No alarms set"
         else:
@@ -107,15 +107,19 @@ class Display:
         self.showing_next_alarm = False
 
     @staticmethod
-    def time_until_alarm(alarm):
+    def minutes_until_alarm(alarm):
         now = datetime.datetime.now()
-        for days_ahead in range(7):
+        for days_ahead in range(8):
             date = now.date() + datetime.timedelta(days=days_ahead)
             candidate = datetime.datetime(date.year, date.month, date.day, alarm["hours"], alarm["minutes"])
             if candidate > now and (not alarm["days"] or date.weekday() in alarm["days"]):
-                difference = int((candidate - now).total_seconds()) // 60
-                return difference // (60 * 24), difference // 60 % 24, difference % 60
-        return 0, 0, 0
+                return int((candidate - now).total_seconds()) // 60
+        return 0
+
+    @staticmethod
+    def time_until_alarm(alarm):
+        difference = Display.minutes_until_alarm(alarm)
+        return difference // (60 * 24), difference // 60 % 24, difference % 60
 
     def load_config(self):
         with open(CONFIG_FILE) as file:
@@ -132,7 +136,10 @@ class Display:
 
     def load_alarms(self):
         with open(ALARMS_FILE) as file:
-            self.alarms = json.load(file)
+            self.alarms = [alarm for alarm in json.load(file) if alarm["active"]]
+
+    def get_next_alarm(self):
+        return min(self.alarms, key=lambda alarm: self.minutes_until_alarm(alarm), default=None)
 
     def apply_brightness(self):
         value = int(self.brightness * 255)

@@ -4,11 +4,10 @@
         "name": "Sa\u0161a Radulovi\u0107",
         "active": false,
         "days": [
-            5,
-            6
+            2
         ],
         "hours": 1,
-        "minutes": 5,
+        "minutes": 0,
         "volume": 100,
         "speaker": "REMOTE",
         "tracks": [
@@ -40,8 +39,10 @@
         "id": 2,
         "name": "",
         "active": false,
-        "days": [],
-        "hours": 0,
+        "days": [
+            4
+        ],
+        "hours": 1,
         "minutes": 0,
         "volume": 100,
         "speaker": "LOCAL",
@@ -60,9 +61,11 @@
     {
         "id": 9,
         "name": "",
-        "active": false,
-        "days": [],
-        "hours": 0,
+        "active": true,
+        "days": [
+            3
+        ],
+        "hours": 1,
         "minutes": 0,
         "volume": 50,
         "speaker": "REMOTE",

@@ -28,6 +28,7 @@ ICONS_DIR = f"{WORKING_DIR}/icons"
 NEXT_ALARM_DISPLAY_DURATION = 3200
 CAMERA_DISMISS_ALARM_TIMEOUT = 30
 CAMERA_UNAVAILABLE_TIMEOUT = 10
+SPEAKER_SWITCH_TIMEOUT = 60
 BOUNCE_TIME = 50
 BUTTON_PIN = 16
 
@@ -56,6 +57,8 @@ class Display:
         self.showing_next_alarm = False
         self.camera_dismiss_task = None
         self.dismissed_alarm_id = None
+        self.alarm_started_at = None
+        self.current_speaker = None
         self.speaker_address = None
         self.testing_alarm = False
         self.active_alarm = None
@@ -115,6 +118,7 @@ class Display:
 
     def silence_alarm(self):
         self.testing_alarm = False
+        self.alarm_started_at = None
         asyncio.run_coroutine_threadsafe(self.player.stop(), self.loop)
         with open(SOUND_TEST_FILE, "w") as file:
             json.dump(None, file)
@@ -137,7 +141,7 @@ class Display:
                     self.trigger_alarm(self.active_alarm)
                     return
         except (OSError, asyncio.TimeoutError):
-            if alive(): self.trigger_alarm(self.active_alarm)
+            if alive(): self.trigger_alarm(self.active_alarm, "LOCAL")
             return
         finally:
             if writer is not None: writer.close()
@@ -145,17 +149,23 @@ class Display:
             self.dismissed_alarm_id = alarm_id
             self.active_alarm = None
 
-    def trigger_alarm(self, alarm):
+    def trigger_alarm(self, alarm, override_speaker=None):
         async def _trigger(track):
             await self.player.stop()
-            await self.player.play(track, alarm["volume"], alarm.get("speaker") == "REMOTE")
+            await self.player.play(track, alarm["volume"], self.current_speaker == "REMOTE")
 
         self.active_alarm = alarm
         tracks = alarm.get("tracks", [])
+        self.alarm_started_at = time.time()
+        self.current_speaker = alarm.get("speaker") if override_speaker is None else override_speaker
         pick = self.files_root + random.choice(tracks) if tracks else self.default_track
         asyncio.run_coroutine_threadsafe(_trigger(pick), self.loop)
 
     def check_alarms(self):
+        if self.active_alarm is not None and self.alarm_started_at is not None and time.time() - self.alarm_started_at >= SPEAKER_SWITCH_TIMEOUT:
+            self.alarm_started_at = None
+            speaker = "LOCAL" if self.current_speaker == "REMOTE" else "REMOTE"
+            self.trigger_alarm(self.active_alarm, speaker)
         now = datetime.datetime.now()
         today_alarms = [alarm for alarm in self.alarms if not alarm["days"] or now.weekday() in alarm["days"]]
         due_alarm = next((alarm for alarm in today_alarms if alarm["hours"] == now.hour and alarm["minutes"] == now.minute), None)

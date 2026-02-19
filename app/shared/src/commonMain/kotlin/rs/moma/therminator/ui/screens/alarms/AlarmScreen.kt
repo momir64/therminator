@@ -109,8 +109,8 @@ fun AlarmScreen(navController: NavHostController, topPadding: Int = 0) {
                 IconButton({ navController.popBackStack() }) {
                     Icon(painterResource(Res.drawable.ic_back), "Back", tint = OutlineColor)
                 }
-                Row {
-                    if (alarm.id != null) {
+                if (alarm.id != null) {
+                    Row {
                         IconButton({ showDeleteConfirmation = true }) {
                             Icon(painterResource(Res.drawable.ic_delete), "Delete alarm", tint = OutlineColor)
                         }
@@ -122,15 +122,6 @@ fun AlarmScreen(navController: NavHostController, topPadding: Int = 0) {
                             Icon(painterResource(Res.drawable.ic_copy), "Copy alarm", tint = OutlineColor)
                         }
                         Spacer(Modifier.width(4.dp))
-                    }
-                    IconButton(onClick = {
-                        alarmViewModel.save(alarm) {
-                            alarmListViewModel.refresh {
-                                navController.popBackStack()
-                            }
-                        }
-                    }) {
-                        Icon(painterResource(Res.drawable.ic_save), "Save", tint = OutlineColor)
                     }
                 }
             }
@@ -253,29 +244,33 @@ fun AlarmScreen(navController: NavHostController, topPadding: Int = 0) {
                             }
                         }
                     }
+                }
 
-                    Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(14.dp))
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Slider(
-                            modifier = Modifier.weight(1f),
-                            value = alarm.volume.toFloat(),
-                            onValueChange = { alarm = alarm.copy(volume = it.roundToInt().coerceIn(1, 100)) },
-                            valueRange = -10f..111f,
-                            colors = SliderDefaults.colors(
-                                thumbColor = AccentColor,
-                                activeTrackColor = AccentColor,
-                                inactiveTrackColor = ButtonColor2
-                            )
-                        )
-                        Text(
-                            "${alarm.volume}%",
-                            Modifier.width(52.dp),
-                            textAlign = TextAlign.End,
-                            color = PrimaryColor,
-                            fontSize = 16.sp
-                        )
+                Row(Modifier.padding(start = 12.dp, end = 24.dp), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton({ alarmViewModel.test(alarm, !isTestOn) }) {
+                        val icon = if (isTestOn) Res.drawable.ic_stop else Res.drawable.ic_play
+                        Icon(painterResource(icon), "Play or stop sound test", Modifier.size(32.dp), tint = OutlineColor)
                     }
+                    Slider(
+                        modifier = Modifier.weight(1f),
+                        value = alarm.volume.toFloat(),
+                        onValueChange = { alarm = alarm.copy(volume = it.roundToInt().coerceIn(1, 100)) },
+                        valueRange = -10f..111f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = AccentColor,
+                            activeTrackColor = AccentColor,
+                            inactiveTrackColor = ButtonColor2
+                        )
+                    )
+                    Text(
+                        "${alarm.volume}%",
+                        Modifier.width(52.dp),
+                        textAlign = TextAlign.End,
+                        color = PrimaryColor,
+                        fontSize = 16.sp
+                    )
                 }
 
                 Spacer(Modifier.weight(1f))
@@ -285,10 +280,15 @@ fun AlarmScreen(navController: NavHostController, topPadding: Int = 0) {
                     colors = ButtonDefaults.buttonColors(containerColor = AccentColor),
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 24.dp).height(52.dp),
                     shape = RoundedCornerShape(8.dp),
-                    onClick = { alarmViewModel.test(alarm, !isTestOn) }
+                    onClick = {
+                        alarmViewModel.save(alarm) {
+                            alarmListViewModel.refresh {
+                                navController.popBackStack()
+                            }
+                        }
+                    }
                 ) {
-                    val text = if (isTestOn) "STOP TEST" else "START TEST"
-                    Text(text, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Save", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }

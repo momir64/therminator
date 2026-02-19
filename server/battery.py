@@ -46,7 +46,7 @@ class BatterySensor:
         return voltage
 
     @_safe_call
-    def get_percentage(self, min_v=9.0, max_v=12.512):
+    def get_percentage(self, min_v=9.0, max_v=12.4):
         voltage = self.get_voltage()
         percent = (voltage - min_v) / (max_v - min_v) * 100
         return max(0, min(100, percent))

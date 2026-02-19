@@ -15,8 +15,9 @@ import httpx
 import json
 import os
 
-ALARMS_FILE = "alarms.json"
-CONFIG_FILE = "config.json"
+WORKING_DIR = "/root/Desktop/therminator/server"
+ALARMS_FILE = f"{WORKING_DIR}/alarms.json"
+CONFIG_FILE = f"{WORKING_DIR}/config.json"
 app = Sanic("Therminator")
 CORS(app, resources={r"/*": {"origins": "*"}})
 

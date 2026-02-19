@@ -191,7 +191,6 @@ fun FilesScreen(navController: NavHostController, topPadding: Int = 0) {
 
     if (showCreateFolderDialog) {
         CreateFolderDialog({ folderName ->
-            println(currentPath + folderName)
             filesViewModel.createFolder(currentPath + folderName)
             showCreateFolderDialog = false
         }) {

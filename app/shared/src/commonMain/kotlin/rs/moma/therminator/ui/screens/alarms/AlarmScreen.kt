@@ -39,6 +39,7 @@ import rs.moma.therminator.ui.navigation.Screen
 import therminator.shared.generated.resources.*
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CardDefaults
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import rs.moma.therminator.data.models.Speaker
@@ -78,12 +79,17 @@ fun AlarmScreen(navController: NavHostController, topPadding: Int = 0) {
     val alarmListViewModel = koinInject<AlarmListViewModel>()
     val isServerOffline by mainViewModel.isServerOffline.collectAsState()
     val isLoading by alarmViewModel.isLoading.collectAsState()
+    val isTestOn by alarmViewModel.isTestOn.collectAsState()
     val vmAlarm by alarmViewModel.alarm.collectAsState()
 
     var alarm by remember(vmAlarm) { mutableStateOf(vmAlarm ?: AlarmInfo()) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
     var minutesFirst by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        alarmViewModel.fetchTestState()
+    }
 
     Box(
         Modifier.fillMaxSize().padding(top = topPadding.dp).imePadding()
@@ -279,9 +285,10 @@ fun AlarmScreen(navController: NavHostController, topPadding: Int = 0) {
                     colors = ButtonDefaults.buttonColors(containerColor = AccentColor),
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 24.dp).height(52.dp),
                     shape = RoundedCornerShape(8.dp),
-                    onClick = { alarmViewModel.test(alarm) }
+                    onClick = { alarmViewModel.test(alarm, !isTestOn) }
                 ) {
-                    Text("SOUND TEST", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    val text = if (isTestOn) "STOP TEST" else "START TEST"
+                    Text(text, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }

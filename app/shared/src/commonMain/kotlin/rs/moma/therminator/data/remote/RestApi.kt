@@ -75,9 +75,12 @@ class RestApi(private val client: HttpClient) {
     }
 
     suspend fun getAlarms(): List<AlarmInfo> = getBody("/alarms", emptyList())
-    suspend fun testAlarm(alarm: AlarmInfo): ResponseStatus = post("/alarms/test", alarm)
     suspend fun updateAlarm(alarm: AlarmInfo): ResponseStatus = post("/alarms", alarm)
     suspend fun deleteAlarm(alarm: AlarmInfo): ResponseStatus = delete("/alarms", alarm)
+
+    suspend fun startAlarm(alarm: AlarmInfo): ResponseStatus = post("/alarms/test", alarm)
+    suspend fun isTestActive(): Boolean = getBody("/alarms/test", false)
+    suspend fun stopTest(): ResponseStatus = delete("/alarms/test", Unit)
 
     suspend fun geocodeLocation(address: String): LocationInfo = getBody("/weather/geocode/$address", LocationInfo())
     suspend fun updateLocation(location: LocationInfo): ResponseStatus = post("/weather", location)

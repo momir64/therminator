@@ -1,10 +1,12 @@
 package rs.moma.therminator.data.remote
 
+import io.ktor.http.HttpStatusCode.Companion.BadGateway
 import rs.moma.therminator.data.models.ResponseStatus.*
 import rs.moma.therminator.data.models.ResponseStatus
 import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.plugins.DefaultRequest
 import org.koin.core.component.KoinComponent
 import io.ktor.serialization.kotlinx.json.*
@@ -40,6 +42,8 @@ class HttpClientManager : KoinComponent {
                 scope?.launch {
                     NetworkResponseService.emit(ResponseStatus.from(response.status))
                 }
+                if (response.status == BadGateway)
+                    throw ResponseException(response, "Response status: ${response.status}")
             }
 
             handleResponseException {

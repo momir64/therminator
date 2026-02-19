@@ -4,6 +4,7 @@ import io.ktor.client.request.forms.MultiPartFormDataContent
 import rs.moma.therminator.data.models.CameraSettings
 import rs.moma.therminator.data.models.ResponseStatus
 import rs.moma.therminator.data.models.LocationInfo
+import rs.moma.therminator.data.models.DisplayInfo
 import rs.moma.therminator.data.models.AlarmInfo
 import rs.moma.therminator.data.models.FileItem
 import io.ktor.client.request.forms.formData
@@ -18,7 +19,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.Headers
-import rs.moma.therminator.data.models.DisplayInfo
 
 class RestApi(private val client: HttpClient) {
     val baseUrl = "https://therminator.moma.rs"
@@ -33,6 +33,12 @@ class RestApi(private val client: HttpClient) {
         ResponseStatus.Error
     }
 
+    private suspend inline fun <reified T> getBody(endpoint: String, default: T): T = try {
+        client.get("$baseUrl$endpoint").body()
+    } catch (_: Throwable) {
+        default
+    }
+
     private suspend fun get(endpoint: String = ""): ResponseStatus = try {
         ResponseStatus.from(client.get("$baseUrl$endpoint").status)
     } catch (_: Throwable) {
@@ -44,14 +50,14 @@ class RestApi(private val client: HttpClient) {
 
     suspend fun ping(): ResponseStatus = get()
 
-    suspend fun getCameraSettings(): CameraSettings = client.get("$baseUrl/settings/camera").body()
+    suspend fun getCameraSettings(): CameraSettings? = getBody("/settings/camera", null)
     suspend fun updateCameraSettings(cameraSettings: CameraSettings) = post("/settings/camera", cameraSettings)
-    suspend fun getFileItems(): List<FileItem> = client.get("$baseUrl/files").body()
+    suspend fun getFileItems(): List<FileItem> = getBody("/files", emptyList())
     suspend fun createFolder(path: String): ResponseStatus = post("/files/folder", mapOf("path" to path))
     suspend fun deleteFiles(paths: List<String>): ResponseStatus = delete("/files", paths)
 
     suspend fun uploadTracks(path: String, files: List<Pair<String, ByteArray>>): ResponseStatus = try {
-        ResponseStatus.from(client.post("$baseUrl/files/track") {
+        ResponseStatus.from(client.post("/files/track") {
             setBody(
                 MultiPartFormDataContent(
                     formData {
@@ -68,15 +74,15 @@ class RestApi(private val client: HttpClient) {
         ResponseStatus.Error
     }
 
-    suspend fun getAlarms(): List<AlarmInfo> = client.get("$baseUrl/alarms").body()
+    suspend fun getAlarms(): List<AlarmInfo> = getBody("/alarms", emptyList())
     suspend fun testAlarm(alarm: AlarmInfo): ResponseStatus = post("/alarms/test", alarm)
     suspend fun updateAlarm(alarm: AlarmInfo): ResponseStatus = post("/alarms", alarm)
     suspend fun deleteAlarm(alarm: AlarmInfo): ResponseStatus = delete("/alarms", alarm)
 
-    suspend fun geocodeLocation(address: String): LocationInfo = client.get("$baseUrl/weather/geocode/$address").body()
+    suspend fun geocodeLocation(address: String): LocationInfo = getBody("/weather/geocode/$address", LocationInfo())
     suspend fun updateLocation(location: LocationInfo): ResponseStatus = post("/weather", location)
-    suspend fun getLocation(): LocationInfo = client.get("$baseUrl/weather").body()
+    suspend fun getLocation(): LocationInfo = getBody("/weather", LocationInfo())
 
     suspend fun updateDisplay(display: DisplayInfo): ResponseStatus = post("/display", display)
-    suspend fun getDisplay(): DisplayInfo = client.get("$baseUrl/display").body()
+    suspend fun getDisplay(): DisplayInfo? = getBody("/display", null)
 }

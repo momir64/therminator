@@ -24,7 +24,17 @@
         "minutes": 0,
         "volume": 50,
         "speaker": "REMOTE",
-        "tracks": []
+        "tracks": [
+            "/UMT/UMT - El Bimbo.mp3",
+            "/UMT/UMT - Hvala Gari.mp3",
+            "/UMT/UMT - Batman.mp3",
+            "/UMT/UMT - Shtockman.mp3",
+            "/UMT/UMT - Dobar drug.mp3",
+            "/UMT/UMT - Nevidljivi slon.mp3",
+            "/UMT/UMT - Hemija.mp3",
+            "/UMT/UMT - Ne\u0107u re\u0107i ne.mp3",
+            "/UMT/UMT - Dejan Stankovi\u0107.mp3"
+        ]
     },
     {
         "id": 2,

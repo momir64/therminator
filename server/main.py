@@ -189,7 +189,7 @@ async def get_alarms(request: Request):
 @app.post("/alarms")
 async def update_alarms(request: Request):
     new_alarm = request.json
-    new_alarm["tracks"] = valid_tracks(app.ctx.sound_test.root_path, new_alarm.get("tracks", []))
+    new_alarm["tracks"] = valid_tracks(app.ctx.files_root, new_alarm.get("tracks", []))
     idx = next((index for index, alarm in enumerate(app.ctx.alarms) if alarm["id"] == new_alarm.get("id")), None)
     if idx is not None:
         app.ctx.alarms[idx] = new_alarm

@@ -2,10 +2,12 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from battery import BatterySensor
 from PIL import Image, ImageTk
+from gpiozero import Button
 from tkinter import font
 import tkinter as tk
 import threading
 import cairosvg
+import datetime
 import asyncio
 import httpx
 import queue
@@ -17,7 +19,11 @@ import os
 WEATHER_URL = "https://weather.googleapis.com/v1/currentConditions:lookup"
 WORKING_DIR = "/root/Desktop/therminator/server"
 CONFIG_FILE = f"{WORKING_DIR}/config.json"
+ALARMS_FILE = f"{WORKING_DIR}/alarms.json"
 ICONS_DIR = f"{WORKING_DIR}/icons"
+NEXT_ALARM_DISPLAY_DURATION = 3200
+BOUNCE_TIME = 50
+BUTTON_PIN = 16
 
 
 class ConfigHandler(FileSystemEventHandler):
@@ -27,6 +33,8 @@ class ConfigHandler(FileSystemEventHandler):
     def on_closed(self, event):
         if event.src_path.endswith(CONFIG_FILE):
             self.display.task_queue.put(self.display.load_config)
+        elif event.src_path.endswith(ALARMS_FILE):
+            self.display.task_queue.put(self.display.load_alarms)
 
 
 class Display:
@@ -37,8 +45,11 @@ class Display:
         self.loop = asyncio.new_event_loop()
         self.task_queue = queue.Queue()
         self.battery = BatterySensor()
+        self.showing_next_alarm = False
+        self.alarm_active = False
 
         self.time_font = font.Font(family="Jura", size=186, weight="bold")
+        self.next_alarm_font = font.Font(family="Jura", size=56, weight="bold")
         self.weather_font = font.Font(family="Jura", size=42, weight="bold")
         self.battery_font = font.Font(family="Jura", size=28)
 
@@ -53,21 +64,58 @@ class Display:
 
         self.battery_icon_label = tk.Label(self.battery_frame, bg="black")
         self.battery_icon_label.pack(side="right")
+        self.battery_icon_photo = None
 
         self.battery_label = tk.Label(self.battery_frame, font=self.battery_font, fg="white", bg="black")
         self.battery_label.pack(side="right")
 
         self.weather_icon_label = tk.Label(self.info_frame, bg="black")
         self.weather_icon_label.pack(anchor="center", pady=(32, 0), fill="both", expand=True)
+        self.weather_icon_photo = None
         self.weather_icon_raw = None
 
         self.weather_label = tk.Label(self.info_frame, font=self.weather_font, fg="white", bg="black")
         self.weather_label.pack(anchor="s", pady=(0, 32))
 
+        self.button = Button(BUTTON_PIN, bounce_time=BOUNCE_TIME / 1000)
+        self.button.when_pressed = self.button_pressed
+
+        self.load_alarms()
         self.load_config()
         self.start_weather_loop()
         self.start_watchdog()
         self.update()
+
+    def button_pressed(self):
+        if not self.alarm_active:
+            self.task_queue.put(self.show_next_alarm)
+
+    def show_next_alarm(self):
+        self.showing_next_alarm = True
+        sorted_alarms = sorted(self.alarms, key=lambda alarm: (not alarm["active"], alarm["hours"], alarm["minutes"]))
+        next_alarm = next((alarm for alarm in sorted_alarms if alarm["active"]), None)
+        if next_alarm is None:
+            text = "No alarms set"
+        else:
+            days, hours, minutes = self.time_until_alarm(next_alarm)  # type: ignore
+            parts = f" {days}d" * (days != 0) + f" {hours}h" * (days != 0 or hours != 0) + f" {minutes}m"
+            text = f"Next alarm in\n{parts.strip()}"
+        self.time_label.config(text=text, font=self.next_alarm_font)
+        self.root.after(NEXT_ALARM_DISPLAY_DURATION, self.hide_next_alarm)
+
+    def hide_next_alarm(self):
+        self.showing_next_alarm = False
+
+    @staticmethod
+    def time_until_alarm(alarm):
+        now = datetime.datetime.now()
+        for days_ahead in range(7):
+            date = now.date() + datetime.timedelta(days=days_ahead)
+            candidate = datetime.datetime(date.year, date.month, date.day, alarm["hours"], alarm["minutes"])
+            if candidate > now and (not alarm["days"] or date.weekday() in alarm["days"]):
+                difference = int((candidate - now).total_seconds()) // 60
+                return difference // (60 * 24), difference // 60 % 24, difference % 60
+        return 0, 0, 0
 
     def load_config(self):
         with open(CONFIG_FILE) as file:
@@ -82,13 +130,18 @@ class Display:
         self.apply_brightness()
         self.update_weather()
 
+    def load_alarms(self):
+        with open(ALARMS_FILE) as file:
+            self.alarms = json.load(file)
+
     def apply_brightness(self):
         value = int(self.brightness * 255)
         color = "#" + f"{value:02x}" * 3
         for label in (self.time_label, self.weather_label, self.battery_label):
             label.config(fg=color)
         if self.weather_icon_raw:
-            self.weather_icon_label.config(image=ImageTk.PhotoImage(self.with_brightness(self.weather_icon_raw)))
+            self.weather_icon_photo = ImageTk.PhotoImage(self.with_brightness(self.weather_icon_raw))
+            self.weather_icon_label.config(image=self.weather_icon_photo)
 
     def with_brightness(self, image):
         channels = image.split()
@@ -105,7 +158,8 @@ class Display:
         charging = self.battery.is_charging()
         percent = self.battery.get_percentage()
         icon = cairosvg.svg2png(url=self.get_battery_icon_filepath(percent, charging), output_height=42)
-        self.battery_icon_label.config(image=ImageTk.PhotoImage(self.with_brightness(Image.open(io.BytesIO(icon)))))
+        self.battery_icon_photo = ImageTk.PhotoImage(self.with_brightness(Image.open(io.BytesIO(icon))))
+        self.battery_icon_label.config(image=self.battery_icon_photo)
         return f"{int(percent)}%" if percent is not None else ""
 
     async def fetch_weather(self):
@@ -115,9 +169,10 @@ class Display:
             async with httpx.AsyncClient(timeout=5) as client:
                 data = (await client.get(url)).json()
                 temperature = data.get("temperature", {}).get("degrees")
-                response = await client.get(f"{data.get("weatherCondition", {}).get("iconBaseUri")}_dark.png")
+                response = await client.get(f"{data.get('weatherCondition', {}).get('iconBaseUri')}_dark.png")
                 self.weather_icon_raw = Image.open(io.BytesIO(response.content))
-                self.weather_icon_label.config(image=ImageTk.PhotoImage(self.with_brightness(self.weather_icon_raw)))
+                self.weather_icon_photo = ImageTk.PhotoImage(self.with_brightness(self.weather_icon_raw))
+                self.weather_icon_label.config(image=self.weather_icon_photo)
                 return f"{int(temperature)}°C" if temperature is not None else "N/A"
         except:
             return "N/A"
@@ -130,7 +185,9 @@ class Display:
     def update(self):
         while not self.task_queue.empty():
             self.task_queue.get()()
-        self.time_label.config(text=time.strftime("%H:%M"))
+        if not self.showing_next_alarm:
+            self.time_label.config(text=time.strftime("%H:%M"))
+            self.time_label.config(font=self.time_font)
         self.battery_label.config(text=self.get_battery())
         self.root.after(1000, self.update)
 

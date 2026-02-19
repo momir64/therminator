@@ -1,5 +1,5 @@
 sanic_cors>=2.2.0
-RPi.GPIO>=0.7.1
+gpiozero>=2.0.1
 watchdog>=6.0.0
 CairoSVG>=2.8.2
 mutagen>=1.47.0

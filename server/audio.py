@@ -1,7 +1,6 @@
-import RPi.GPIO as GPIO
+from gpiozero import DigitalOutputDevice
 import asyncio
 import shlex
-
 
 class AudioPlayer:
     _DEVNULL = asyncio.subprocess.DEVNULL
@@ -14,9 +13,7 @@ class AudioPlayer:
     def __init__(self, address):
         self.process = None
         self.address = address
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self._MUTE_PIN, GPIO.OUT)
-        GPIO.output(self._MUTE_PIN, GPIO.LOW)
+        self._mute_pin = DigitalOutputDevice(self._MUTE_PIN, initial_value=False)
         self._bluetooth_task = asyncio.create_task(self._bluetooth_connect_service())
 
     async def _bluetooth_connect_service(self):
@@ -32,13 +29,13 @@ class AudioPlayer:
             await asyncio.sleep(5)
 
     async def _play_on_device(self, device, filename, factor):
-        if device == self._LOCAL_DEVICE: GPIO.output(self._MUTE_PIN, GPIO.HIGH)
+        if device == self._LOCAL_DEVICE: self._mute_pin.on()
         cmd = f"mpg123 -f {factor} -o alsa -a {device} {shlex.quote(filename)}"
         self.process = await asyncio.create_subprocess_shell(cmd, stdin=self._DEVNULL, stdout=self._PIPE, stderr=self._PIPE)
 
     async def play(self, filename: str, volume: int = 75, bluetooth: bool = True):
         await self.stop()
-        factor = max(1, min(self._MAX_AMPLITUDE, self._MAX_AMPLITUDE * volume // 100))
+        factor = max(1, min(self._MAX_AMPLITUDE, int(self._MAX_AMPLITUDE * (volume / 100) ** 2)))
         device = self._BLUETOOTH_DEVICE if bluetooth else self._LOCAL_DEVICE
         if not bluetooth: factor = int(factor * 0.15)
         await self._play_on_device(device, filename, factor)
@@ -55,7 +52,7 @@ class AudioPlayer:
             await self._play_on_device(self._LOCAL_DEVICE, filename, factor)
 
     async def stop(self):
-        GPIO.output(self._MUTE_PIN, GPIO.LOW)
+        self._mute_pin.off()
         if self.process and self.process.returncode is None:
             try:
                 self.process.terminate()
@@ -75,7 +72,6 @@ class AudioPlayer:
 
     async def cleanup(self):
         await self.stop()
-        # GPIO.cleanup()
         if self._bluetooth_task:
             self._bluetooth_task.cancel()
             try:

@@ -3,7 +3,6 @@ from sanic.response import empty, json as json_response
 from sanic import Sanic, Request, Websocket
 from files import safe_path, valid_tracks
 from battery import BatterySensor
-from camera import ThermalCamera
 from sanic.request import File
 from sanic_cors import CORS
 import asyncio
@@ -29,9 +28,9 @@ async def config(server: Sanic):
         server.ctx.password = data["password"]
         server.ctx.google_key = data["key"]
         server.ctx.config = data["config"]
-        camera = data["config"]["camera"]
         server.ctx.files_root = data["config"]["files"]["root"]
-        server.ctx.camera = ThermalCamera(camera["mac"], camera["resolution"], camera["framerate"])
+        server.ctx.camera_socket = data["config"]["camera"]["socket"]
+        server.ctx.camera_writer = None
     with open(ALARMS_FILE) as file:
         server.ctx.alarms = json.load(file)
 
@@ -81,7 +80,18 @@ async def get_camera_settings(request: Request):
 async def update_camera_settings(request: Request):
     body = request.json
     resolution, framerate = int(body["resolution"]), int(body["framerate"])
-    await app.ctx.camera.update_settings(resolution, framerate)
+
+    if not app.ctx.camera_writer:
+        try:
+            app.ctx.camera_writer = (await asyncio.open_unix_connection(app.ctx.camera_socket))[1]
+        except OSError:
+            pass
+
+    if app.ctx.camera_writer:
+        command = json.dumps({"type": "settings", "resolution": resolution, "framerate": framerate}) + "\n"
+        app.ctx.camera_writer.write(command.encode())
+        await app.ctx.camera_writer.drain()
+
     app.ctx.config["camera"]["resolution"] = resolution
     app.ctx.config["camera"]["framerate"] = framerate
     app.ctx.config["camera"]["threshold"] = body["threshold"]
@@ -99,13 +109,18 @@ async def update_camera_settings(request: Request):
 @app.websocket("/camera")
 async def camera_ws(request: Request, ws: Websocket):
     if not await authenticate_ws(ws): return
-    queue = app.ctx.camera.get_queue()
+    writer = None
     try:
+        reader, writer = await asyncio.open_unix_connection(app.ctx.camera_socket)
         while True:
-            values = await queue.get()
-            await ws.send(json.dumps(values))
-    except WebsocketClosed:
+            line = await reader.readline()
+            if not line: break
+            await ws.send(line.decode().strip())
+    except (WebsocketClosed, OSError):
         pass
+    finally:
+        if writer is not None:
+            writer.close()
 
 
 @app.websocket("/battery")

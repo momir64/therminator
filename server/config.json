@@ -15,6 +15,7 @@
             "brightness": 75
         },
         "camera": {
+            "socket": "/tmp/therminator_camera.sock",
             "mac": "9C:13:9E:91:2F:4D",
             "resolution": 0,
             "framerate": 4,

@@ -97,13 +97,18 @@ class Display:
         self.update()
 
     def button_pressed(self):
-        if self.active_alarm is not None or self.testing_alarm:
+        if self.active_alarm is not None:
+            self.task_queue.put(self.dismiss_alarm)
+        elif self.testing_alarm:
             self.task_queue.put(self.dismiss_alarm)
         else:
             self.task_queue.put(self.show_next_alarm)
 
     def dismiss_alarm(self):
         self.active_alarm = None
+        self.silence_alarm()
+
+    def silence_alarm(self):
         self.testing_alarm = False
         asyncio.run_coroutine_threadsafe(self.player.stop(), self.loop)
         with open(SOUND_TEST_FILE, "w") as file:
@@ -121,7 +126,7 @@ class Display:
         now = datetime.datetime.now()
         today_alarms = [alarm for alarm in self.alarms if not alarm["days"] or now.weekday() in alarm["days"]]
         due_alarm = next((alarm for alarm in today_alarms if alarm["hours"] == now.hour and alarm["minutes"] == now.minute), None)
-        if due_alarm is not None and (not self.active_alarm or self.active_alarm["id"] == due_alarm["id"]):
+        if due_alarm is not None and (not self.active_alarm or self.active_alarm["id"] != due_alarm["id"]):
             self.trigger_alarm(due_alarm)  # type: ignore
 
     def show_next_alarm(self):
@@ -244,7 +249,7 @@ class Display:
 
     def start_weather_loop(self):
         self.update_weather()
-        self.root.after(60000, self.start_weather_loop)
+        self.root.after(1000 * 60 * 5, self.start_weather_loop)
 
     def run(self):
         self.loop.create_task(self.tk_loop())

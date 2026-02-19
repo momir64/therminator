@@ -5,17 +5,16 @@ from files import safe_path, valid_tracks
 from battery import BatterySensor
 from camera import ThermalCamera
 from sanic.request import File
-from audio import AudioPlayer
 from sanic_cors import CORS
 import asyncio
 import base64
-import random
 import files
 import httpx
 import json
 import os
 
 WORKING_DIR = "/root/Desktop/therminator/server"
+SOUND_TEST_FILE = f"{WORKING_DIR}/test.json"
 ALARMS_FILE = f"{WORKING_DIR}/alarms.json"
 CONFIG_FILE = f"{WORKING_DIR}/config.json"
 app = Sanic("Therminator")
@@ -33,7 +32,6 @@ async def config(server: Sanic):
         camera = data["config"]["camera"]
         server.ctx.files_root = data["config"]["files"]["root"]
         server.ctx.camera = ThermalCamera(camera["mac"], camera["resolution"], camera["framerate"])
-        server.ctx.player = AudioPlayer(data["config"]["speaker"]["mac"])
     with open(ALARMS_FILE) as file:
         server.ctx.alarms = json.load(file)
 
@@ -210,16 +208,23 @@ async def delete_alarms(request: Request):
     return empty()
 
 
+@app.get("/alarms/test")
+async def get_test_alarm(request: Request):
+    with open(SOUND_TEST_FILE) as file:
+        return json_response(json.load(file) is not None)
+
+
 @app.post("/alarms/test")
 async def test_alarm(request: Request):
-    alarm = request.json
-    if await app.ctx.player.is_playing():
-        await app.ctx.player.stop()
-        return empty()
-    default = app.ctx.config["files"]["default"]
-    alarm["tracks"] = valid_tracks(app.ctx.files_root, alarm.get("tracks", []))
-    track = app.ctx.files_root + random.choice(alarm["tracks"]) if alarm["tracks"] else default
-    await app.ctx.player.play(track, alarm["volume"], alarm["speaker"] == "REMOTE")
+    with open(SOUND_TEST_FILE, "w") as file:
+        json.dump(request.json, file, indent=4)
+    return empty()
+
+
+@app.delete("/alarms/test")
+async def stop_test_alarm(request: Request):
+    with open(SOUND_TEST_FILE, "w") as file:
+        json.dump(None, file)
     return empty()
 
 

@@ -2,6 +2,8 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from battery import BatterySensor
 from PIL import Image, ImageTk
+from files import valid_tracks
+from audio import AudioPlayer
 from gpiozero import Button
 from tkinter import font
 import tkinter as tk
@@ -9,6 +11,7 @@ import threading
 import cairosvg
 import datetime
 import asyncio
+import random
 import httpx
 import queue
 import json
@@ -18,6 +21,7 @@ import os
 
 WEATHER_URL = "https://weather.googleapis.com/v1/currentConditions:lookup"
 WORKING_DIR = "/root/Desktop/therminator/server"
+SOUND_TEST_FILE = f"{WORKING_DIR}/test.json"
 CONFIG_FILE = f"{WORKING_DIR}/config.json"
 ALARMS_FILE = f"{WORKING_DIR}/alarms.json"
 ICONS_DIR = f"{WORKING_DIR}/icons"
@@ -35,6 +39,8 @@ class ConfigHandler(FileSystemEventHandler):
             self.display.task_queue.put(self.display.load_config)
         elif event.src_path.endswith(ALARMS_FILE):
             self.display.task_queue.put(self.display.load_alarms)
+        elif event.src_path.endswith(SOUND_TEST_FILE):
+            self.display.task_queue.put(self.display.handle_test_alarm)
 
 
 class Display:
@@ -46,7 +52,10 @@ class Display:
         self.task_queue = queue.Queue()
         self.battery = BatterySensor()
         self.showing_next_alarm = False
+        self.speaker_address = None
+        self.testing_alarm = False
         self.active_alarm = None
+        self.player = None
         self.alarms = []
 
         self.time_font = font.Font(family="Jura", size=186, weight="bold")
@@ -88,8 +97,32 @@ class Display:
         self.update()
 
     def button_pressed(self):
-        if self.active_alarm is None:
+        if self.active_alarm is not None or self.testing_alarm:
+            self.task_queue.put(self.dismiss_alarm)
+        else:
             self.task_queue.put(self.show_next_alarm)
+
+    def dismiss_alarm(self):
+        self.active_alarm = None
+        self.testing_alarm = False
+        asyncio.run_coroutine_threadsafe(self.player.stop(), self.loop)
+        with open(SOUND_TEST_FILE, "w") as file:
+            json.dump(None, file)
+
+    def trigger_alarm(self, alarm):
+        if self.active_alarm is not None:
+            asyncio.run_coroutine_threadsafe(self.player.stop(), self.loop)
+        self.active_alarm = alarm
+        tracks = alarm.get("tracks", [])
+        track = self.files_root + random.choice(tracks) if tracks else self.default_track
+        asyncio.run_coroutine_threadsafe(self.player.play(track, alarm["volume"], alarm.get("speaker") == "REMOTE"), self.loop)
+
+    def check_alarms(self):
+        now = datetime.datetime.now()
+        today_alarms = [alarm for alarm in self.alarms if not alarm["days"] or now.weekday() in alarm["days"]]
+        due_alarm = next((alarm for alarm in today_alarms if alarm["hours"] == now.hour and alarm["minutes"] == now.minute), None)
+        if due_alarm is not None and (not self.active_alarm or self.active_alarm["id"] == due_alarm["id"]):
+            self.trigger_alarm(due_alarm)  # type: ignore
 
     def show_next_alarm(self):
         self.showing_next_alarm = True
@@ -126,13 +159,17 @@ class Display:
 
     def load_config(self):
         with open(CONFIG_FILE) as file:
-            config = json.load(file)
-            weather = config["config"]["weather"]
-            brightness = config["config"]["display"]["brightness"]
+            data = json.load(file)
+            config = data["config"]
+            weather = config["weather"]
+            brightness = config["display"]["brightness"]
+            self.speaker_address = config["speaker"]["mac"]
+            self.default_track = config["files"]["default"]
+            self.files_root = config["files"]["root"]
             self.longitude = weather.get("longitude")
             self.latitude = weather.get("latitude")
             self.city = weather.get("location")
-            self.google_key = config.get("key")
+            self.google_key = data["key"]
             self.brightness = brightness / 100
         self.apply_brightness()
         self.update_weather()
@@ -192,6 +229,7 @@ class Display:
     def update(self):
         while not self.task_queue.empty():
             self.task_queue.get()()
+        self.check_alarms()
         if not self.showing_next_alarm:
             self.time_label.config(text=time.strftime("%H:%M"))
             self.time_label.config(font=self.time_font)
@@ -213,12 +251,26 @@ class Display:
         self.loop.run_forever()
 
     async def tk_loop(self):
+        self.player = AudioPlayer(self.speaker_address)
         while True:
             try:
                 self.root.update()
             except tk.TclError:
                 break
             await asyncio.sleep(0.05)
+
+    def handle_test_alarm(self):
+        if self.active_alarm is not None: return
+        with open(SOUND_TEST_FILE) as file:
+            alarm = json.load(file)
+        if alarm is None:
+            self.testing_alarm = False
+            asyncio.run_coroutine_threadsafe(self.player.stop(), self.loop)
+        else:
+            self.testing_alarm = True
+            tracks = valid_tracks(self.files_root, alarm.get("tracks", []))
+            track = self.files_root + random.choice(tracks) if tracks else self.default_track
+            asyncio.run_coroutine_threadsafe(self.player.play(track, alarm["volume"], alarm.get("speaker") == "REMOTE"), self.loop)
 
 
 if __name__ == "__main__":

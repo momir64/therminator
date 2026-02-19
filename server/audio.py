@@ -30,14 +30,14 @@ class AudioPlayer:
 
     async def _play_on_device(self, device, filename, factor):
         if device == self._LOCAL_DEVICE: self._mute_pin.on()
-        cmd = f"mpg123 -f {factor} -o alsa -a {device} {shlex.quote(filename)}"
+        cmd = f"mpg123 --loop -1 -f {factor} -o alsa -a {device} {shlex.quote(filename)}"
         self.process = await asyncio.create_subprocess_shell(cmd, stdin=self._DEVNULL, stdout=self._PIPE, stderr=self._PIPE)
 
     async def play(self, filename: str, volume: int = 75, bluetooth: bool = True):
         await self.stop()
         factor = max(1, min(self._MAX_AMPLITUDE, int(self._MAX_AMPLITUDE * (volume / 100) ** 2)))
         device = self._BLUETOOTH_DEVICE if bluetooth else self._LOCAL_DEVICE
-        if not bluetooth: factor = int(factor * 0.15)
+        if not bluetooth: factor = int(factor * 0.2)
         await self._play_on_device(device, filename, factor)
         if bluetooth:
             asyncio.create_task(self._handle_bluetooth_fallback(filename, factor))

@@ -36,32 +36,9 @@
         ]
     },
     {
-        "id": 2,
-        "name": "",
-        "active": false,
-        "days": [
-            4
-        ],
-        "hours": 1,
-        "minutes": 0,
-        "volume": 100,
-        "speaker": "LOCAL",
-        "tracks": [
-            "/UMT/UMT - El Bimbo.mp3",
-            "/UMT/UMT - Hvala Gari.mp3",
-            "/UMT/UMT - Batman.mp3",
-            "/UMT/UMT - Shtockman.mp3",
-            "/UMT/UMT - Dobar drug.mp3",
-            "/UMT/UMT - Nevidljivi slon.mp3",
-            "/UMT/UMT - Hemija.mp3",
-            "/UMT/UMT - Ne\u0107u re\u0107i ne.mp3",
-            "/UMT/UMT - Dejan Stankovi\u0107.mp3"
-        ]
-    },
-    {
         "id": 9,
         "name": "",
-        "active": true,
+        "active": false,
         "days": [
             3,
             4,
@@ -83,7 +60,7 @@
     {
         "id": 10,
         "name": "",
-        "active": true,
+        "active": false,
         "days": [
             3,
             4,
@@ -94,9 +71,30 @@
             0
         ],
         "hours": 21,
-        "minutes": 6,
+        "minutes": 22,
         "volume": 50,
         "speaker": "REMOTE",
         "tracks": []
+    },
+    {
+        "id": 11,
+        "name": "",
+        "active": true,
+        "days": [
+            4,
+            0,
+            6,
+            1,
+            5,
+            2,
+            3
+        ],
+        "hours": 21,
+        "minutes": 15,
+        "volume": 100,
+        "speaker": "REMOTE",
+        "tracks": [
+            "/test.mp3"
+        ]
     }
 ]

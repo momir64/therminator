@@ -16,6 +16,7 @@ import org.jetbrains.compose.resources.painterResource
 import rs.moma.therminator.ui.screens.alarms.AlarmCard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
+import rs.moma.therminator.ui.utils.minutesUntilAlarm
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.statusBars
 import rs.moma.therminator.viewmodels.AlarmViewModel
@@ -101,8 +102,8 @@ fun HomeScreen(navController: NavHostController, topPadding: Int = 0) {
                 }
             }
 
-            val sortedAlarms = alarms.sortedWith(compareBy({ !it.active }, { it.hours }, { it.minutes }, { it.name }))
-            val nextAlarm = sortedAlarms.firstOrNull { it.active }
+            val sortedAlarms = alarms.sortedWith(compareBy({ !it.active }, { it.hours }, { it.minutes }, { minutesUntilAlarm(it) }, { it.name }))
+            val nextAlarm = alarms.filter { it.active }.minByOrNull { minutesUntilAlarm(it) }
             Row(
                 Modifier.height(36.dp).padding(bottom = 6.dp, start = 26.dp, end = 26.dp),
                 verticalAlignment = Alignment.Bottom

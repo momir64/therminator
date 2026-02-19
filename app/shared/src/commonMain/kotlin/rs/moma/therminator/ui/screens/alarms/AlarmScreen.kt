@@ -83,6 +83,7 @@ fun AlarmScreen(navController: NavHostController, topPadding: Int = 0) {
     var alarm by remember(vmAlarm) { mutableStateOf(vmAlarm ?: AlarmInfo()) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+    var minutesFirst by remember { mutableStateOf(false) }
 
     Box(
         Modifier.fillMaxSize().padding(top = topPadding.dp).imePadding()
@@ -136,14 +137,15 @@ fun AlarmScreen(navController: NavHostController, topPadding: Int = 0) {
                         Modifier.fillMaxWidth().clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
-                        ) { showTimePicker = true },
+                        ) { minutesFirst = false; showTimePicker = true },
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         listOf(alarm.hours, alarm.minutes).forEachIndexed { index, value ->
                             if (index > 0) Text(":", Modifier.padding(horizontal = 8.dp), fontWeight = FontWeight.Bold, color = Color.White, fontSize = 72.sp)
                             Box(
-                                Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(ButtonColor2),
+                                Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(ButtonColor2)
+                                    .clickable { minutesFirst = index == 1; showTimePicker = true },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(value.pad(), Modifier.padding(vertical = 30.dp), fontWeight = FontWeight.Bold, color = Color.White, fontSize = 72.sp)
@@ -302,7 +304,8 @@ fun AlarmScreen(navController: NavHostController, topPadding: Int = 0) {
                 alarm = alarm.copy(hours = hour, minutes = minute)
                 showTimePicker = false
             },
-            onDismiss = { showTimePicker = false }
+            onDismiss = { showTimePicker = false },
+            minutesFirst = minutesFirst
         )
     }
 

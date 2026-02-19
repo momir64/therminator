@@ -106,6 +106,9 @@ class Display:
     def hide_next_alarm(self):
         self.showing_next_alarm = False
 
+    def get_next_alarm(self):
+        return min(self.alarms, key=lambda alarm: self.minutes_until_alarm(alarm), default=None)
+
     @staticmethod
     def minutes_until_alarm(alarm):
         now = datetime.datetime.now()
@@ -137,9 +140,6 @@ class Display:
     def load_alarms(self):
         with open(ALARMS_FILE) as file:
             self.alarms = [alarm for alarm in json.load(file) if alarm["active"]]
-
-    def get_next_alarm(self):
-        return min(self.alarms, key=lambda alarm: self.minutes_until_alarm(alarm), default=None)
 
     def apply_brightness(self):
         value = int(self.brightness * 255)

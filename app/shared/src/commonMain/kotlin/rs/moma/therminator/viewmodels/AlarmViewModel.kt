@@ -22,6 +22,9 @@ class AlarmViewModel : ViewModel(), KoinComponent {
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
+    private val _isTestOn = MutableStateFlow(false)
+    val isTestOn = _isTestOn.asStateFlow()
+
     private val _alarm = MutableStateFlow<AlarmInfo?>(null)
     val alarm = _alarm.asStateFlow()
 
@@ -33,9 +36,16 @@ class AlarmViewModel : ViewModel(), KoinComponent {
         _alarm.value = null
     }
 
-    fun test(alarm: AlarmInfo) = viewModelScope.launch {
-        if (api.testAlarm(alarm) != ResponseStatus.Successful)
-            toastService.show("Failed to start the test")
+    fun fetchTestState() = viewModelScope.launch {
+        _isTestOn.value = api.isTestActive()
+    }
+
+    fun test(alarm: AlarmInfo, on: Boolean) = viewModelScope.launch {
+        val response = if (on) api.startAlarm(alarm) else api.stopTest()
+        if (response != ResponseStatus.Successful)
+            toastService.show("Failed to ${if (on) "start" else "stop"} the test")
+        else
+            _isTestOn.value = on
     }
 
     fun save(alarm: AlarmInfo, onSuccess: () -> Unit) = viewModelScope.launch {

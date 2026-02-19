@@ -22,6 +22,7 @@ import rs.moma.therminator.viewmodels.AlarmViewModel
 import rs.moma.therminator.ui.dialogs.OfflineDialog
 import rs.moma.therminator.viewmodels.MainViewModel
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.runtime.mutableLongStateOf
 import rs.moma.therminator.ui.utils.timeUntilAlarm
 import androidx.compose.foundation.layout.padding
 import therminator.shared.generated.resources.Res
@@ -33,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import rs.moma.therminator.ui.navigation.Screen
 import therminator.shared.generated.resources.*
 import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -43,6 +45,8 @@ import androidx.navigation.NavHostController
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import rs.moma.therminator.ui.theme.*
@@ -51,6 +55,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.compose.koinInject
+import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 @Composable
@@ -65,6 +70,14 @@ fun HomeScreen(navController: NavHostController, topPadding: Int = 0) {
     val isLoading by alarmListViewModel.isLoading.collectAsState()
     val isRefreshing by alarmListViewModel.isRefreshing.collectAsState()
     val isServerOffline by mainViewModel.isServerOffline.collectAsState()
+
+    var tick by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000)
+            tick++
+        }
+    }
 
     Box(Modifier.fillMaxSize().padding(top = topPadding.dp)) {
         Column(Modifier.fillMaxSize().imePadding()) {
@@ -96,7 +109,7 @@ fun HomeScreen(navController: NavHostController, topPadding: Int = 0) {
             ) {
                 if (nextAlarm == null) {
                     Text("No alarms set", color = PrimaryColor2, fontSize = 15.sp)
-                } else timeUntilAlarm(nextAlarm).let {
+                } else timeUntilAlarm(nextAlarm).also { _ -> tick }.let {
                     val time = buildString {
                         if (it.first != 0L) append(" ${it.first}d")
                         if (it.first != 0L || it.second != 0L) append(" ${it.second}h")

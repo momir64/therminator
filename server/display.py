@@ -55,6 +55,7 @@ class Display:
         self.battery = BatterySensor()
         self.showing_next_alarm = False
         self.camera_dismiss_task = None
+        self.dismissed_alarm_id = None
         self.speaker_address = None
         self.testing_alarm = False
         self.active_alarm = None
@@ -140,7 +141,9 @@ class Display:
             return
         finally:
             if writer is not None: writer.close()
-        if alive(): self.active_alarm = None
+        if alive():
+            self.dismissed_alarm_id = alarm_id
+            self.active_alarm = None
 
     def trigger_alarm(self, alarm):
         async def _trigger(track):
@@ -156,8 +159,10 @@ class Display:
         now = datetime.datetime.now()
         today_alarms = [alarm for alarm in self.alarms if not alarm["days"] or now.weekday() in alarm["days"]]
         due_alarm = next((alarm for alarm in today_alarms if alarm["hours"] == now.hour and alarm["minutes"] == now.minute), None)
-        if due_alarm is not None and (not self.active_alarm or self.active_alarm["id"] != due_alarm["id"]):
+        if due_alarm is not None and (not self.active_alarm or self.active_alarm["id"] != due_alarm["id"]) and self.dismissed_alarm_id != due_alarm["id"]:
             self.trigger_alarm(due_alarm)  # type: ignore
+        elif due_alarm is None:
+            self.dismissed_alarm_id = None
 
     def show_next_alarm(self):
         self.showing_next_alarm = True

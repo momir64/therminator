@@ -3,6 +3,7 @@ package rs.moma.therminator.ui.dialogs
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TimePickerSelectionMode
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Arrangement
@@ -38,9 +39,11 @@ fun TimePickerDialog(
     initialHour: Int,
     initialMinute: Int,
     onConfirm: (hour: Int, minute: Int) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    minutesFirst: Boolean = false
 ) {
     val timePickerState = rememberTimePickerState(initialHour, initialMinute, true)
+    if (minutesFirst) timePickerState.selection = TimePickerSelectionMode.Minute
 
     Box(
         modifier = Modifier

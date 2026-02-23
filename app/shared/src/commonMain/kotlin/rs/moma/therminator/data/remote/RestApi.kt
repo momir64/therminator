@@ -57,7 +57,7 @@ class RestApi(private val client: HttpClient) {
     suspend fun deleteFiles(paths: List<String>): ResponseStatus = delete("/files", paths)
 
     suspend fun uploadTracks(path: String, files: List<Pair<String, ByteArray>>): ResponseStatus = try {
-        ResponseStatus.from(client.post("/files/track") {
+        ResponseStatus.from(client.post("$baseUrl/files/track") {
             setBody(
                 MultiPartFormDataContent(
                     formData {

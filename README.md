@@ -8,17 +8,17 @@
 The idea of the project is to create a smart home alarm clock system. The system’s main focus is ensuring that the user actually wakes up. In order to achieve this, the system will have a high level of redundancy. Another goal of the system is adaptability to both the environment and the user’s preferences. To prevent the user from falling back asleep after turning off the alarm, the system will use a thermal camera to detect whether the user is still in bed.
 <br/>
 
-<img src="https://ftp.moma.rs/therminator/clock.png" width="640"/>
+<img alt="clock" src="https://github.com/user-attachments/assets/4cb2b238-a6d6-4c18-9281-8bec4032f89c" width="640"/>
 
 # System components
 To allow proper positioning of each system element within a room, the system is divided into modules. It consists of three modules: the clock, the camera, and the speaker. The modules are wirelessly connected, and system coordination is handled by the clock module.
 
-![](https://ftp.moma.rs/therminator/nacrt.png)
+![](https://github.com/user-attachments/assets/b1e4db0a-b104-409a-be8b-4859e7e2ccf0)
 
 ## Camera module
 It is important to note that the resolution of the thermal camera is only 32×24 pixels. In addition, the subject will be located at a considerable distance from the camera (around 2 meters). As a consequence, the expected size of the subject will be only a few pixels, so the detection algorithm will be relatively simple and based on a limited number of parameters (e.g. a threshold depending on room temperature).
 
-![](https://ftp.moma.rs/therminator/demo.png)
+![](https://github.com/user-attachments/assets/0de7752f-c1db-48fe-a1b0-757db223d45e)
 
 ### Components
 - [x] MLX90640BAB thermal camera (BAB – variant with a smaller FOV lens)
